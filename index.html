@@ -14,8 +14,7 @@
       margin: auto;
     }
 
-    h1,
-    p {
+    h1, p {
       text-align: center;
     }
 
@@ -56,19 +55,19 @@
     }
 
     #rankingList li.top1 {
-      background: #d4af37; /* Gold */
+      background: #d4af37;
       color: #111;
       font-weight: bold;
     }
 
     #rankingList li.top2 {
-      background: #c0c0c0; /* Silver */
+      background: #c0c0c0;
       color: #111;
       font-weight: bold;
     }
 
     #rankingList li.top3 {
-      background: #cd7f32; /* Bronze */
+      background: #cd7f32;
       color: #111;
       font-weight: bold;
     }
@@ -87,6 +86,10 @@
       font-weight: bold;
       margin-top: 20px;
     }
+
+    #hiddenGoogleForm {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -101,6 +104,15 @@
     <button id="submitBtn">Submit Vote</button>
     <p id="responseMsg"></p>
   </div>
+
+  <!-- Hidden Google Form -->
+  <form id="hiddenGoogleForm" action="https://docs.google.com/forms/d/e/1FAIpQLSfcFWNqwsuru_hZbALyU_h8m89AzcOX_xGLytheEJNRNaKPXg/formResponse" method="POST" target="hiddenIframe">
+    <input type="text" name="entry.840683232" id="field1" />
+    <input type="text" name="entry.1808098160" id="field2" />
+    <input type="text" name="entry.1134855181" id="field3" />
+    <input type="submit" />
+  </form>
+  <iframe name="hiddenIframe" style="display: none;"></iframe>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
@@ -135,7 +147,6 @@
       const embedPromises = [];
 
       for (const post of posts) {
-        // Create and insert embed block
         const embedHTML = `
           <div class="video-card">
             <blockquote class="reddit-card">
@@ -145,7 +156,6 @@
         `;
         videoGrid.insertAdjacentHTML("beforeend", embedHTML);
 
-        // Fetch title for ranking list
         const fetchPromise = fetch(post.url + ".json")
           .then((res) => res.json())
           .then((json) => {
@@ -160,71 +170,53 @@
         embedPromises.push(fetchPromise);
       }
 
-      // Wait for all embeds and titles to load
       await Promise.all(embedPromises);
 
-      // Now trigger Reddit embed script re-scan
       window.__REDDIT_EMBED__?.onDOMContentLoaded?.();
 
-      // Enable drag-and-drop
       Sortable.create(rankingList, {
         animation: 150,
         onEnd: updateTop3Styling,
       });
 
-      updateTop3Styling(); // Initial colorization
+      updateTop3Styling();
     }
 
     function updateTop3Styling() {
       const items = [...rankingList.children];
       items.forEach((li, i) => {
         li.classList.remove("top1", "top2", "top3");
+        const plainText = li.textContent.replace(/^\d+\.\s*/, "");
 
         if (i === 0) {
           li.classList.add("top1");
-          li.textContent = `1. ${li.textContent.replace(/^\d+\.\s*/, "")}`;
+          li.textContent = `1. ${plainText}`;
         } else if (i === 1) {
           li.classList.add("top2");
-          li.textContent = `2. ${li.textContent.replace(/^\d+\.\s*/, "")}`;
+          li.textContent = `2. ${plainText}`;
         } else if (i === 2) {
           li.classList.add("top3");
-          li.textContent = `3. ${li.textContent.replace(/^\d+\.\s*/, "")}`;
+          li.textContent = `3. ${plainText}`;
         } else {
-          li.textContent = li.textContent.replace(/^\d+\.\s*/, "");
+          li.textContent = plainText;
         }
       });
     }
 
     document.getElementById("submitBtn").addEventListener("click", () => {
-  const top3 = [...rankingList.children]
-    .slice(0, 3)
-    .map((item) => item.textContent.replace(/^\d+\.\s*/, ""));
+      const top3 = [...rankingList.children]
+        .slice(0, 3)
+        .map((item) => item.textContent.replace(/^\d+\.\s*/, ""));
 
-  const googleFormURL =
-    "https://docs.google.com/forms/d/e/1FAIpQLSfcFWNqwsuru_hZbALyU_h8m89AzcOX_xGLytheEJNRNaKPXg/formResponse";
+      document.getElementById("field1").value = top3[0] || "";
+      document.getElementById("field2").value = top3[1] || "";
+      document.getElementById("field3").value = top3[2] || "";
 
-  const formData = new URLSearchParams();
-  formData.append("entry.840683232", top3[0] || "");
-  formData.append("entry.1808098160", top3[1] || "");
-  formData.append("entry.1134855181", top3[2] || "");
-
-  fetch(googleFormURL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
-    },
-    body: formData.toString(),
-  })
-    .then(() => {
+      document.getElementById("hiddenGoogleForm").submit();
       document.getElementById("responseMsg").innerText =
         "Your vote has been submitted. Thank you!";
-    })
-    .catch(() => {
-      document.getElementById("responseMsg").innerText =
-        "There was an error submitting your vote.";
     });
-});
+
     loadVideos();
   </script>
 </body>
