@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Vote for Your Top 3 Favorite Videos</title>
 
-  <script async src="https://embed.redditmedia.com/widgets/platform.js" charset="UTF-8"></script>
+  <!-- The Reddit script is now loaded dynamically in the script below -->
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -94,7 +94,7 @@
 
     #hiddenGoogleForm {
       display: none;
-    } 
+    }
     .judge-criteria {
       max-width: 600px;
       margin-left: auto;
@@ -148,46 +148,70 @@
     async function loadVideos() {
       try {
         const response = await fetch("links.json");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const urls = await response.json();
 
-        const embedPromises = [];
+        // Fetch all video titles first before changing the page
+        const videoDataPromises = urls.map(url =>
+          fetch(url + ".json")
+          .then(res => {
+            if (!res.ok) throw new Error(`Failed to fetch JSON for ${url}`);
+            return res.json();
+          })
+          .then(json => ({
+            title: json[0].data.children[0].data.title,
+            url: url
+          }))
+          .catch(err => {
+            console.error("Title fetch failed for:", url, err);
+            return {
+              title: "Failed to load title",
+              url: url
+            }; // Fallback data
+          })
+        );
 
-        urls.forEach((url, index) => {
-          const embedHTML = `
+        const videos = await Promise.all(videoDataPromises);
+
+        // Build the HTML for the video grid and ranking list
+        let videoGridHTML = '';
+        let rankingListHTML = '';
+
+        videos.forEach((video, index) => {
+          videoGridHTML += `
             <div class="video-card">
               <blockquote class="reddit-card">
-                <a href="${url}">Loading title...</a>
+                <a href="${video.url}">${video.title}</a>
               </blockquote>
             </div>
           `;
-          videoGrid.insertAdjacentHTML("beforeend", embedHTML);
-
-          const fetchPromise = fetch(url + ".json")
-            .then((res) => res.json())
-            .then((json) => {
-              const title = json[0].data.children[0].data.title;
-              const li = document.createElement("li");
-              li.textContent = title;
-              li.setAttribute("data-id", "video" + (index + 1));
-              rankingList.appendChild(li);
-            })
-            .catch((err) => console.error("Title fetch failed:", url, err));
-
-          embedPromises.push(fetchPromise);
+          rankingListHTML += `<li data-id="video${index + 1}">${video.title}</li>`;
         });
 
-        await Promise.all(embedPromises);
+        // Update the DOM with the new content all at once
+        videoGrid.innerHTML = videoGridHTML;
+        rankingList.innerHTML = rankingListHTML;
 
-        window.__REDDIT_EMBED__?.onDOMContentLoaded?.();
+        // Dynamically load the Reddit script AFTER the content is on the page
+        const redditScript = document.createElement('script');
+        redditScript.src = 'https://embed.redditmedia.com/widgets/platform.js';
+        redditScript.async = true;
+        redditScript.charset = 'UTF-8';
+        document.body.appendChild(redditScript);
 
+        // Initialize the sortable list
         Sortable.create(rankingList, {
           animation: 150,
           onEnd: updateTop3Styling,
         });
 
-        updateTop3Styling();
+        updateTop3Styling(); // Apply initial 1, 2, 3 styling
+
       } catch (error) {
-        console.error("Failed to load links.json:", error);
+        console.error("Failed to load or process videos:", error);
+        videoGrid.innerHTML = `<p style="text-align: center; color: #ff8a80;">Could not load videos. Please check that 'links.json' is available.</p>`;
       }
     }
 
