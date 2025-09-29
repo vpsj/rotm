@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vote for Your Top 3 Favorite Videos</title>
 
   <script async src="https://embed.redditmedia.com/widgets/platform.js" charset="UTF-8"></script>
@@ -16,21 +15,25 @@
       margin: auto;
     }
 
-    h1, p, h2 {
+    h1, p {
+      text-align: center;
+    }
+
+    h2, p {
       text-align: center;
     }
 
     .video-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 15px;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 20px;
       margin-bottom: 40px;
     }
 
     .video-card {
       background: #222;
-      border-radius: 6px;
-      padding: 8px;
+      border-radius: 8px;
+      padding: 10px;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     }
 
@@ -54,9 +57,6 @@
       border-radius: 5px;
       cursor: grab;
       transition: background 0.3s;
-      word-wrap: break-word;
-      overflow-wrap: anywhere;
-      font-size: 14px;
     }
 
     #rankingList li.top1 {
@@ -94,39 +94,25 @@
 
     #hiddenGoogleForm {
       display: none;
-    }
-
+    } 
     .judge-criteria {
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }
+    /* Set a max-width for the container, so it's not full-width */
+    max-width: 600px; /* Adjust this value to control the list width */
+    /* Center the container itself */
+    margin-left: auto;
+    margin-right: auto;
+}
 
-    .judge-criteria ul {
-      padding-left: 100px;
-      text-align: left;
-      list-style-position: inside;
-    }
+.judge-criteria ul {
+    /* Remove any default browser padding that pushes the list left */
+    padding-left: 100px;
+    
+    /* Ensure the list is left-aligned within its centered container */
+    text-align: left;
+    list-style-position: inside; /* Puts the bullet point inside the list item text flow */
+}
+  
 
-    .sortable-ghost {
-      opacity: 0.6;
-      background: #444;
-    }
-    .sortable-chosen {
-      background: #555 !important;
-    }
-
-    @media (max-width: 600px) {
-      body {
-        padding: 10px;
-      }
-      .video-grid {
-        grid-template-columns: 1fr;
-      }
-      #rankingSection {
-        padding: 15px;
-      }
-    }
   </style>
 </head>
 <body>
@@ -140,7 +126,7 @@
         <li>Authentic track sound over low-effort background music</li>
         <li>Title of the video, how descriptive and informative it is</li>
     </ul>
-  </div>
+</div>
 
   <div class="video-grid" id="videoGrid"></div>
 
@@ -164,16 +150,46 @@
 
   <script>
     const posts = [
-      { id: "video1", url: "https://www.reddit.com/r/indianrailways/comments/1ng1q7u/the_perfect_pause_i_dont_mind_if_train_stops_for/" },
-      { id: "video2", url: "https://www.reddit.com/r/indianrailways/comments/1noihrh/the_beauty_of_indian_railways_never_fails_to/" },
-      { id: "video3", url: "https://www.reddit.com/r/indianrailways/comments/1n7cazk/serenic_views_of_western_ghats/" },
-      { id: "video4", url: "https://www.reddit.com/r/indianrailways/comments/1naivvw/vandebharat_with_view/" },
-      { id: "video5", url: "https://www.reddit.com/r/indianrailways/comments/1nibgy6/so_got_another_diesel_action_on_central_railway/" },
-      { id: "video6", url: "https://www.reddit.com/r/indianrailways/comments/1nndjsl/puri_hwh_vande_bharat_coming_in_on_puri_platform/" },
-      { id: "video7", url: "https://www.reddit.com/r/indianrailways/comments/1nqxayq/12903_on_a_curve_little_behind_nizamuddin_railway/" },
-      { id: "video8", url: "https://www.reddit.com/r/indianrailways/comments/1nb0dho/train_being_shunted_to_shed/" },
-      { id: "video9", url: "https://www.reddit.com/r/indianrailways/comments/1non1wm/20708_vande_bharat_xings_12774_scshm_sf_at_a/" },
-      { id: "video10", url: "https://www.reddit.com/r/indianrailways/comments/1nokuvb/repeat_post_for_og_sound_a_short_parallel_race/" },
+      {
+        id: "video1",
+        url: "https://www.reddit.com/r/indianrailways/comments/1ng1q7u/the_perfect_pause_i_dont_mind_if_train_stops_for/",
+      },
+      {
+        id: "video2",
+        url: "https://www.reddit.com/r/indianrailways/comments/1noihrh/the_beauty_of_indian_railways_never_fails_to/",
+      },
+      {
+        id: "video3",
+        url: "https://www.reddit.com/r/indianrailways/comments/1n7cazk/serenic_views_of_western_ghats/",
+      },
+      {
+        id: "video4",
+        url: "https://www.reddit.com/r/indianrailways/comments/1naivvw/vandebharat_with_view/",
+      },
+      {
+        id: "video5",
+        url: "https://www.reddit.com/r/indianrailways/comments/1nibgy6/so_got_another_diesel_action_on_central_railway/",
+      },
+	  {
+		id: "video6",
+		url: "https://www.reddit.com/r/indianrailways/comments/1nndjsl/puri_hwh_vande_bharat_coming_in_on_puri_platform/",
+	  },
+	  {
+		id: "video7",
+		url: "https://www.reddit.com/r/indianrailways/comments/1nqxayq/12903_on_a_curve_little_behind_nizamuddin_railway/",
+	  },
+	  {
+		id: "video8",
+		url: "https://www.reddit.com/r/indianrailways/comments/1nb0dho/train_being_shunted_to_shed/",
+	  },
+	  {
+		id: "video9",
+		url: "https://www.reddit.com/r/indianrailways/comments/1non1wm/20708_vande_bharat_xings_12774_scshm_sf_at_a/",
+	  },
+    {
+		id: "video10",
+		url: "https://www.reddit.com/r/indianrailways/comments/1nokuvb/repeat_post_for_og_sound_a_short_parallel_race/",
+	  },
     ];
 
     const videoGrid = document.getElementById("videoGrid");
@@ -183,21 +199,19 @@
       const embedPromises = [];
 
       for (const post of posts) {
-        // Reddit embed
         const embedHTML = `
           <div class="video-card">
             <blockquote class="reddit-card">
-              <a href="${post.url}">Loading...</a>
+              <a href="${post.url}">Loading title...</a>
             </blockquote>
           </div>
         `;
         videoGrid.insertAdjacentHTML("beforeend", embedHTML);
 
-        // Use oEmbed API (works in Chrome, CORS enabled)
-        const fetchPromise = fetch("https://www.reddit.com/oembed?url=" + encodeURIComponent(post.url))
+        const fetchPromise = fetch(post.url + ".json")
           .then((res) => res.json())
           .then((json) => {
-            const title = json.title;
+            const title = json[0].data.children[0].data.title;
             const li = document.createElement("li");
             li.textContent = title;
             li.setAttribute("data-id", post.id);
@@ -215,11 +229,6 @@
       Sortable.create(rankingList, {
         animation: 150,
         onEnd: updateTop3Styling,
-        ghostClass: "sortable-ghost",
-        chosenClass: "sortable-chosen",
-        dragClass: "sortable-drag",
-        fallbackOnBody: true,
-        touchStartThreshold: 5
       });
 
       updateTop3Styling();
@@ -230,6 +239,7 @@
       items.forEach((li, i) => {
         li.classList.remove("top1", "top2", "top3");
         const plainText = li.textContent.replace(/^\d+\.\s*/, "");
+
         if (i === 0) {
           li.classList.add("top1");
           li.textContent = `1. ${plainText}`;
@@ -263,3 +273,5 @@
   </script>
 </body>
 </html>
+
+
