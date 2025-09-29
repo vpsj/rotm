@@ -1,278 +1,305 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Vote for Your Top 3 Favorite Videos</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <title>Vote for Your Top 3 Favorite Videos</title>
 
-  <script async src="https://embed.redditmedia.com/widgets/platform.js" charset="UTF-8"></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      padding: 20px;
-      max-width: 1200px;
-      margin: auto;
-    }
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111;
+            color: #fff;
+            padding: 20px;
+            max-width: 1200px;
+            margin: auto;
+        }
 
-    h1, p {
-      text-align: center;
-    }
+        h1, p {
+            text-align: center;
+        }
 
-    h2, p {
-      text-align: center;
-    }
+        h2 {
+            text-align: center;
+        }
 
-    .video-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-      gap: 20px;
-      margin-bottom: 40px;
-    }
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
 
-    .video-card {
-      background: #222;
-      border-radius: 8px;
-      padding: 10px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    }
+        .video-card {
+            background: #222;
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
 
-    #rankingSection {
-      background: #222;
-      padding: 20px;
-      border-radius: 10px;
-    }
+        #rankingSection {
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+        }
 
-    #rankingList {
-      list-style: none;
-      padding: 0;
-      margin-top: 20px;
-    }
+        #rankingList {
+            list-style: none;
+            padding: 0;
+            margin-top: 20px;
+        }
 
-    #rankingList li {
-      padding: 10px 15px;
-      margin: 10px 0;
-      background: #333;
-      border: 1px solid #555;
-      border-radius: 5px;
-      cursor: grab;
-      transition: background 0.3s;
-    }
+        #rankingList li {
+            padding: 10px 15px;
+            margin: 10px 0;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            cursor: grab;
+            transition: background 0.3s;
+            /* Added for better touch target */
+            touch-action: none;
+        }
 
-    #rankingList li.top1 {
-      background: #d4af37;
-      color: #111;
-      font-weight: bold;
-    }
+        #rankingList li.top1 {
+            background: #d4af37;
+            color: #111;
+            font-weight: bold;
+        }
 
-    #rankingList li.top2 {
-      background: #c0c0c0;
-      color: #111;
-      font-weight: bold;
-    }
+        #rankingList li.top2 {
+            background: #c0c0c0;
+            color: #111;
+            font-weight: bold;
+        }
 
-    #rankingList li.top3 {
-      background: #cd7f32;
-      color: #111;
-      font-weight: bold;
-    }
+        #rankingList li.top3 {
+            background: #cd7f32;
+            color: #111;
+            font-weight: bold;
+        }
 
-    #submitBtn {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
+        #submitBtn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-    #responseMsg {
-      text-align: center;
-      font-weight: bold;
-      margin-top: 20px;
-    }
+        #responseMsg {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 20px;
+        }
 
-    #hiddenGoogleForm {
-      display: none;
-    } 
-    .judge-criteria {
-    /* Set a max-width for the container, so it's not full-width */
-    max-width: 600px; /* Adjust this value to control the list width */
-    /* Center the container itself */
-    margin-left: auto;
-    margin-right: auto;
-}
+        #hiddenGoogleForm {
+            display: none;
+        }
 
-.judge-criteria ul {
-    /* Remove any default browser padding that pushes the list left */
-    padding-left: 100px;
-    
-    /* Ensure the list is left-aligned within its centered container */
-    text-align: left;
-    list-style-position: inside; /* Puts the bullet point inside the list item text flow */
-}
-  
+        .judge-criteria {
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-  </style>
+        .judge-criteria ul {
+            padding-left: 100px;
+            text-align: left;
+            list-style-position: inside;
+        }
+    </style>
 </head>
 <body>
-  <h1>Vote for Your Top 3 Favorite Videos</h1>
-  <p>Watch the videos below, then drag the titles to rank your top 3.</p>
+    <h1>Vote for Your Top 3 Favorite Videos</h1>
+    <p>Watch the videos below, then drag the titles to rank your top 3.</p>
 
-  <h2> Judge the videos based on the following criteron:</h2>
-  <div class="judge-criteria">
-    <ul>
-        <li>The video quality and cinematography of the clip</li>
-        <li>Authentic track sound over low-effort background music</li>
-        <li>Title of the video, how descriptive and informative it is</li>
-    </ul>
-</div>
+    <h2>Judge the videos based on the following criteron:</h2>
+    <div class="judge-criteria">
+        <ul>
+            <li>The video quality and cinematography of the clip</li>
+            <li>Authentic track sound over low-effort background music</li>
+            <li>Title of the video, how descriptive and informative it is</li>
+        </ul>
+    </div>
 
-  <div class="video-grid" id="videoGrid"></div>
+    <div class="video-grid" id="videoGrid"></div>
 
-  <div id="rankingSection">
-    <h2>Drag to Rank Top 3</h2>
-    <ul id="rankingList"></ul>
-    <button id="submitBtn">Submit Vote</button>
-    <p id="responseMsg"></p>
-  </div>
+    <div id="rankingSection">
+        <h2>Drag to Rank Top 3</h2>
+        <ul id="rankingList"></ul>
+        <button id="submitBtn">Submit Vote</button>
+        <p id="responseMsg"></p>
+    </div>
 
-  <!-- Hidden Google Form -->
-  <form id="hiddenGoogleForm" action="https://docs.google.com/forms/d/e/1FAIpQLSfcFWNqwsuru_hZbALyU_h8m89AzcOX_xGLytheEJNRNaKPXg/formResponse" method="POST" target="hiddenIframe">
-    <input type="text" name="entry.840683232" id="field1" />
-    <input type="text" name="entry.1808098160" id="field2" />
-    <input type="text" name="entry.1134855181" id="field3" />
-    <input type="submit" />
-  </form>
-  <iframe name="hiddenIframe" style="display: none;"></iframe>
+    <form id="hiddenGoogleForm" action="https://docs.google.com/forms/d/e/1FAIpQLSfcFWNqwsuru_hZbALyU_h8m89AzcOX_xGLytheEJNRNaKPXg/formResponse" method="POST" target="hiddenIframe">
+        <input type="text" name="entry.840683232" id="field1" />
+        <input type="text" name="entry.1808098160" id="field2" />
+        <input type="text" name="entry.1134855181" id="field3" />
+        <input type="submit" />
+    </form>
+    <iframe name="hiddenIframe" style="display: none;"></iframe>
 
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script async src="https://embed.redditmedia.com/widgets/platform.js" charset="UTF-8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
-  <script>
-    const posts = [
-      {
-        id: "video1",
-        url: "https://www.reddit.com/r/indianrailways/comments/1ng1q7u/the_perfect_pause_i_dont_mind_if_train_stops_for/",
-      },
-      {
-        id: "video2",
-        url: "https://www.reddit.com/r/indianrailways/comments/1noihrh/the_beauty_of_indian_railways_never_fails_to/",
-      },
-      {
-        id: "video3",
-        url: "https://www.reddit.com/r/indianrailways/comments/1n7cazk/serenic_views_of_western_ghats/",
-      },
-      {
-        id: "video4",
-        url: "https://www.reddit.com/r/indianrailways/comments/1naivvw/vandebharat_with_view/",
-      },
-      {
-        id: "video5",
-        url: "https://www.reddit.com/r/indianrailways/comments/1nibgy6/so_got_another_diesel_action_on_central_railway/",
-      },
-	  {
-		id: "video6",
-		url: "https://www.reddit.com/r/indianrailways/comments/1nndjsl/puri_hwh_vande_bharat_coming_in_on_puri_platform/",
-	  },
-	  {
-		id: "video7",
-		url: "https://www.reddit.com/r/indianrailways/comments/1nqxayq/12903_on_a_curve_little_behind_nizamuddin_railway/",
-	  },
-	  {
-		id: "video8",
-		url: "https://www.reddit.com/r/indianrailways/comments/1nb0dho/train_being_shunted_to_shed/",
-	  },
-	  {
-		id: "video9",
-		url: "https://www.reddit.com/r/indianrailways/comments/1non1wm/20708_vande_bharat_xings_12774_scshm_sf_at_a/",
-	  },
-	  {
- 		id: "video10",
- 		url: "https://www.reddit.com/r/indianrailways/comments/1nokuvb/repeat_post_for_og_sound_a_short_parallel_race/"
- 	  },	
-    ]
-;
+    <script>
+        const posts = [
+            {
+                id: "video1",
+                url: "https://www.reddit.com/r/indianrailways/comments/1ng1q7u/the_perfect_pause_i_dont_mind_if_train_stops_for/",
+            },
+            {
+                id: "video2",
+                url: "https://www.reddit.com/r/indianrailways/comments/1noihrh/the_beauty_of_indian_railways_never_fails_to/",
+            },
+            {
+                id: "video3",
+                url: "https://www.reddit.com/r/indianrailways/comments/1n7cazk/serenic_views_of_western_ghats/",
+            },
+            {
+                id: "video4",
+                url: "https://www.reddit.com/r/indianrailways/comments/1naivvw/vandebharat_with_view/",
+            },
+            {
+                id: "video5",
+                url: "https://www.reddit.com/r/indianrailways/comments/1nibgy6/so_got_another_diesel_action_on_central_railway/",
+            },
+            {
+                id: "video6",
+                url: "https://www.reddit.com/r/indianrailways/comments/1nndjsl/puri_hwh_vande_bharat_coming_in_on_puri_platform/",
+            },
+            {
+                id: "video7",
+                url: "https://www.reddit.com/r/indianrailways/comments/1nqxayq/12903_on_a_curve_little_behind_nizamuddin_railway/",
+            },
+            {
+                id: "video8",
+                url: "https://www.reddit.com/r/indianrailways/comments/1nb0dho/train_being_shunted_to_shed/",
+            },
+            {
+                id: "video9",
+                url: "https://www.reddit.com/r/indianrailways/comments/1non1wm/20708_vande_bharat_xings_12774_scshm_sf_at_a/",
+            },
+            {
+                id: "video10",
+                url: "https://www.reddit.com/r/indianrailways/comments/1nokuvb/repeat_post_for_og_sound_a_short_parallel_race/"
+            },
+        ];
 
-    const videoGrid = document.getElementById("videoGrid");
-    const rankingList = document.getElementById("rankingList");
+        const videoGrid = document.getElementById("videoGrid");
+        const rankingList = document.getElementById("rankingList");
 
-    async function loadVideos() {
-      const embedPromises = [];
+        /**
+         * Extracts a cleaned title from a Reddit post URL slug.
+         * Example: "https://.../1nibgy6/so_got_another_diesel_action_on_central_railway/"
+         * becomes "So got another diesel action on central railway"
+         * @param {string} url - The full Reddit URL.
+         * @returns {string} - The cleaned title.
+         */
+        function getTitleFromUrl(url) {
+            const parts = url.split('/');
+            // The title slug is usually the second-to-last part of the URL
+            let slug = parts[parts.length - 2];
 
-      for (const post of posts) {
-        const embedHTML = `
-          <div class="video-card">
-            <blockquote class="reddit-card">
-              <a href="${post.url}">Loading title...</a>
-            </blockquote>
-          </div>
-        `;
-        videoGrid.insertAdjacentHTML("beforeend", embedHTML);
+            // Remove the ID part if it exists (e.g., "1ng1q7u_the_perfect_pause" -> "the_perfect_pause")
+            // This is safer than relying on the URL structure being exactly as shown in the example.
+            const idPattern = /^[a-z0-9]+_(.*)/;
+            const match = slug.match(idPattern);
+            if (match && match[1]) {
+                slug = match[1];
+            }
 
-        const fetchPromise = fetch(post.url + ".json")
-          .then((res) => res.json())
-          .then((json) => {
-            const title = json[0].data.children[0].data.title;
-            const li = document.createElement("li");
-            li.textContent = title;
-            li.setAttribute("data-id", post.id);
-            rankingList.appendChild(li);
-          })
-          .catch((err) => console.error("Title fetch failed:", post.url, err));
+            // Replace underscores with spaces
+            let title = slug.replace(/_/g, ' ');
 
-        embedPromises.push(fetchPromise);
-      }
+            // Capitalize the first letter (simple sentence case)
+            if (title.length > 0) {
+                title = title.charAt(0).toUpperCase() + title.slice(1);
+            }
 
-      await Promise.all(embedPromises);
-
-      window.__REDDIT_EMBED__?.onDOMContentLoaded?.();
-
-      Sortable.create(rankingList, {
-        animation: 150,
-        onEnd: updateTop3Styling,
-      });
-
-      updateTop3Styling();
-    }
-
-    function updateTop3Styling() {
-      const items = [...rankingList.children];
-      items.forEach((li, i) => {
-        li.classList.remove("top1", "top2", "top3");
-        const plainText = li.textContent.replace(/^\d+\.\s*/, "");
-
-        if (i === 0) {
-          li.classList.add("top1");
-          li.textContent = `1. ${plainText}`;
-        } else if (i === 1) {
-          li.classList.add("top2");
-          li.textContent = `2. ${plainText}`;
-        } else if (i === 2) {
-          li.classList.add("top3");
-          li.textContent = `3. ${plainText}`;
-        } else {
-          li.textContent = plainText;
+            return title;
         }
-      });
-    }
 
-    document.getElementById("submitBtn").addEventListener("click", () => {
-      const top3 = [...rankingList.children]
-        .slice(0, 3)
-        .map((item) => item.textContent.replace(/^\d+\.\s*/, ""));
+        function loadVideos() {
+            for (const post of posts) {
+                const title = getTitleFromUrl(post.url);
 
-      document.getElementById("field1").value = top3[0] || "";
-      document.getElementById("field2").value = top3[1] || "";
-      document.getElementById("field3").value = top3[2] || "";
+                // 1. Render the video embed
+                const embedHTML = `
+                    <div class="video-card">
+                        <blockquote class="reddit-card">
+                            <a href="${post.url}">${title}</a>
+                        </blockquote>
+                    </div>
+                `;
+                videoGrid.insertAdjacentHTML("beforeend", embedHTML);
 
-      document.getElementById("hiddenGoogleForm").submit();
-      document.getElementById("responseMsg").innerText =
-        "Your vote has been submitted. Thank you!";
-    });
+                // 2. Add the title to the ranking list
+                const li = document.createElement("li");
+                li.textContent = title;
+                li.setAttribute("data-id", post.id);
+                rankingList.appendChild(li);
+            }
 
-    loadVideos();
-  </script>
+            // Initialize Sortable.js with mobile-friendly options
+            Sortable.create(rankingList, {
+                animation: 150,
+                onEnd: updateTop3Styling,
+                // CRITICAL for better mobile support (forces use of Sortable's touch fallback)
+                forceFallback: true,
+                // Optional: to make it easier to drag on mobile, you can use a handle
+                // handle: ".drag-handle",
+            });
+
+            // Re-render reddit embeds after all elements are on the page
+            window.__REDDIT_EMBED__?.onDOMContentLoaded?.();
+
+            // Initial styling update
+            updateTop3Styling();
+        }
+
+        function updateTop3Styling() {
+            const items = [...rankingList.children];
+            items.forEach((li, i) => {
+                li.classList.remove("top1", "top2", "top3");
+                // Get the clean text by removing potential '1. ', '2. ', '3. ' prefixes
+                const plainText = li.textContent.replace(/^\d+\.\s*/, "");
+
+                if (i === 0) {
+                    li.classList.add("top1");
+                    li.textContent = `1. ${plainText}`;
+                } else if (i === 1) {
+                    li.classList.add("top2");
+                    li.textContent = `2. ${plainText}`;
+                } else if (i === 2) {
+                    li.classList.add("top3");
+                    li.textContent = `3. ${plainText}`;
+                } else {
+                    li.textContent = plainText; // Remove any old number prefix
+                }
+            });
+        }
+
+        document.getElementById("submitBtn").addEventListener("click", () => {
+            const top3 = [...rankingList.children]
+                .slice(0, 3)
+                // Get the text, removing the '1. ', '2. ', '3. ' prefix
+                .map((item) => item.textContent.replace(/^\d+\.\s*/, ""));
+
+            document.getElementById("field1").value = top3[0] || "";
+            document.getElementById("field2").value = top3[1] || "";
+            document.getElementById("field3").value = top3[2] || "";
+
+            // Wait for a moment to ensure values are set, then submit
+            setTimeout(() => {
+                document.getElementById("hiddenGoogleForm").submit();
+                document.getElementById("responseMsg").innerText =
+                    "Your vote has been submitted. Thank you!";
+            }, 10); // Small delay to ensure DOM updates before submission
+        });
+
+        loadVideos();
+    </script>
 </body>
 </html>
-
-
