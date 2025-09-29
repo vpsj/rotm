@@ -16,17 +16,13 @@
       margin: auto;
     }
 
-    h1, p {
-      text-align: center;
-    }
-
-    h2, p {
+    h1, p, h2 {
       text-align: center;
     }
 
     .video-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* was 360px */
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 15px;
       margin-bottom: 40px;
     }
@@ -98,7 +94,7 @@
 
     #hiddenGoogleForm {
       display: none;
-    } 
+    }
 
     .judge-criteria {
       max-width: 600px;
@@ -144,7 +140,7 @@
         <li>Authentic track sound over low-effort background music</li>
         <li>Title of the video, how descriptive and informative it is</li>
     </ul>
-</div>
+  </div>
 
   <div class="video-grid" id="videoGrid"></div>
 
@@ -168,46 +164,16 @@
 
   <script>
     const posts = [
-      {
-        id: "video1",
-        url: "https://www.reddit.com/r/indianrailways/comments/1ng1q7u/the_perfect_pause_i_dont_mind_if_train_stops_for/",
-      },
-      {
-        id: "video2",
-        url: "https://www.reddit.com/r/indianrailways/comments/1noihrh/the_beauty_of_indian_railways_never_fails_to/",
-      },
-      {
-        id: "video3",
-        url: "https://www.reddit.com/r/indianrailways/comments/1n7cazk/serenic_views_of_western_ghats/",
-      },
-      {
-        id: "video4",
-        url: "https://www.reddit.com/r/indianrailways/comments/1naivvw/vandebharat_with_view/",
-      },
-      {
-        id: "video5",
-        url: "https://www.reddit.com/r/indianrailways/comments/1nibgy6/so_got_another_diesel_action_on_central_railway/",
-      },
-      {
-        id: "video6",
-        url: "https://www.reddit.com/r/indianrailways/comments/1nndjsl/puri_hwh_vande_bharat_coming_in_on_puri_platform/",
-      },
-      {
-        id: "video7",
-        url: "https://www.reddit.com/r/indianrailways/comments/1nqxayq/12903_on_a_curve_little_behind_nizamuddin_railway/",
-      },
-      {
-        id: "video8",
-        url: "https://www.reddit.com/r/indianrailways/comments/1nb0dho/train_being_shunted_to_shed/",
-      },
-      {
-        id: "video9",
-        url: "https://www.reddit.com/r/indianrailways/comments/1non1wm/20708_vande_bharat_xings_12774_scshm_sf_at_a/",
-      },
-      {
-        id: "video10",
-        url: "https://www.reddit.com/r/indianrailways/comments/1nokuvb/repeat_post_for_og_sound_a_short_parallel_race/",
-      },
+      { id: "video1", url: "https://www.reddit.com/r/indianrailways/comments/1ng1q7u/the_perfect_pause_i_dont_mind_if_train_stops_for/" },
+      { id: "video2", url: "https://www.reddit.com/r/indianrailways/comments/1noihrh/the_beauty_of_indian_railways_never_fails_to/" },
+      { id: "video3", url: "https://www.reddit.com/r/indianrailways/comments/1n7cazk/serenic_views_of_western_ghats/" },
+      { id: "video4", url: "https://www.reddit.com/r/indianrailways/comments/1naivvw/vandebharat_with_view/" },
+      { id: "video5", url: "https://www.reddit.com/r/indianrailways/comments/1nibgy6/so_got_another_diesel_action_on_central_railway/" },
+      { id: "video6", url: "https://www.reddit.com/r/indianrailways/comments/1nndjsl/puri_hwh_vande_bharat_coming_in_on_puri_platform/" },
+      { id: "video7", url: "https://www.reddit.com/r/indianrailways/comments/1nqxayq/12903_on_a_curve_little_behind_nizamuddin_railway/" },
+      { id: "video8", url: "https://www.reddit.com/r/indianrailways/comments/1nb0dho/train_being_shunted_to_shed/" },
+      { id: "video9", url: "https://www.reddit.com/r/indianrailways/comments/1non1wm/20708_vande_bharat_xings_12774_scshm_sf_at_a/" },
+      { id: "video10", url: "https://www.reddit.com/r/indianrailways/comments/1nokuvb/repeat_post_for_og_sound_a_short_parallel_race/" },
     ];
 
     const videoGrid = document.getElementById("videoGrid");
@@ -217,19 +183,21 @@
       const embedPromises = [];
 
       for (const post of posts) {
+        // Reddit embed
         const embedHTML = `
           <div class="video-card">
             <blockquote class="reddit-card">
-              <a href="${post.url}">Loading title...</a>
+              <a href="${post.url}">Loading...</a>
             </blockquote>
           </div>
         `;
         videoGrid.insertAdjacentHTML("beforeend", embedHTML);
 
-        const fetchPromise = fetch(post.url + ".json")
+        // Use oEmbed API (works in Chrome, CORS enabled)
+        const fetchPromise = fetch("https://www.reddit.com/oembed?url=" + encodeURIComponent(post.url))
           .then((res) => res.json())
           .then((json) => {
-            const title = json[0].data.children[0].data.title;
+            const title = json.title;
             const li = document.createElement("li");
             li.textContent = title;
             li.setAttribute("data-id", post.id);
@@ -262,7 +230,6 @@
       items.forEach((li, i) => {
         li.classList.remove("top1", "top2", "top3");
         const plainText = li.textContent.replace(/^\d+\.\s*/, "");
-
         if (i === 0) {
           li.classList.add("top1");
           li.textContent = `1. ${plainText}`;
