@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Vote for Your Top 3 Favorite Videos</title>
 
   <script async src="https://embed.redditmedia.com/widgets/platform.js" charset="UTF-8"></script>
@@ -25,15 +26,15 @@
 
     .video-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* was 360px */
+      gap: 15px;
       margin-bottom: 40px;
     }
 
     .video-card {
       background: #222;
-      border-radius: 8px;
-      padding: 10px;
+      border-radius: 6px;
+      padding: 8px;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     }
 
@@ -57,6 +58,9 @@
       border-radius: 5px;
       cursor: grab;
       transition: background 0.3s;
+      word-wrap: break-word;
+      overflow-wrap: anywhere;
+      font-size: 14px;
     }
 
     #rankingList li.top1 {
@@ -95,24 +99,38 @@
     #hiddenGoogleForm {
       display: none;
     } 
+
     .judge-criteria {
-    /* Set a max-width for the container, so it's not full-width */
-    max-width: 600px; /* Adjust this value to control the list width */
-    /* Center the container itself */
-    margin-left: auto;
-    margin-right: auto;
-}
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
 
-.judge-criteria ul {
-    /* Remove any default browser padding that pushes the list left */
-    padding-left: 100px;
-    
-    /* Ensure the list is left-aligned within its centered container */
-    text-align: left;
-    list-style-position: inside; /* Puts the bullet point inside the list item text flow */
-}
-  
+    .judge-criteria ul {
+      padding-left: 100px;
+      text-align: left;
+      list-style-position: inside;
+    }
 
+    .sortable-ghost {
+      opacity: 0.6;
+      background: #444;
+    }
+    .sortable-chosen {
+      background: #555 !important;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .video-grid {
+        grid-template-columns: 1fr;
+      }
+      #rankingSection {
+        padding: 15px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -170,26 +188,26 @@
         id: "video5",
         url: "https://www.reddit.com/r/indianrailways/comments/1nibgy6/so_got_another_diesel_action_on_central_railway/",
       },
-	  {
-		id: "video6",
-		url: "https://www.reddit.com/r/indianrailways/comments/1nndjsl/puri_hwh_vande_bharat_coming_in_on_puri_platform/",
-	  },
-	  {
-		id: "video7",
-		url: "https://www.reddit.com/r/indianrailways/comments/1nqxayq/12903_on_a_curve_little_behind_nizamuddin_railway/",
-	  },
-	  {
-		id: "video8",
-		url: "https://www.reddit.com/r/indianrailways/comments/1nb0dho/train_being_shunted_to_shed/",
-	  },
-	  {
-		id: "video9",
-		url: "https://www.reddit.com/r/indianrailways/comments/1non1wm/20708_vande_bharat_xings_12774_scshm_sf_at_a/",
-	  },
-    {
-		id: "video10",
-		url: "https://www.reddit.com/r/indianrailways/comments/1nokuvb/repeat_post_for_og_sound_a_short_parallel_race/",
-	  },
+      {
+        id: "video6",
+        url: "https://www.reddit.com/r/indianrailways/comments/1nndjsl/puri_hwh_vande_bharat_coming_in_on_puri_platform/",
+      },
+      {
+        id: "video7",
+        url: "https://www.reddit.com/r/indianrailways/comments/1nqxayq/12903_on_a_curve_little_behind_nizamuddin_railway/",
+      },
+      {
+        id: "video8",
+        url: "https://www.reddit.com/r/indianrailways/comments/1nb0dho/train_being_shunted_to_shed/",
+      },
+      {
+        id: "video9",
+        url: "https://www.reddit.com/r/indianrailways/comments/1non1wm/20708_vande_bharat_xings_12774_scshm_sf_at_a/",
+      },
+      {
+        id: "video10",
+        url: "https://www.reddit.com/r/indianrailways/comments/1nokuvb/repeat_post_for_og_sound_a_short_parallel_race/",
+      },
     ];
 
     const videoGrid = document.getElementById("videoGrid");
@@ -229,6 +247,11 @@
       Sortable.create(rankingList, {
         animation: 150,
         onEnd: updateTop3Styling,
+        ghostClass: "sortable-ghost",
+        chosenClass: "sortable-chosen",
+        dragClass: "sortable-drag",
+        fallbackOnBody: true,
+        touchStartThreshold: 5
       });
 
       updateTop3Styling();
@@ -273,6 +296,3 @@
   </script>
 </body>
 </html>
-
-
-
