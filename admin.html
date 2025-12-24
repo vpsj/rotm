@@ -341,7 +341,7 @@ https://preview.redd.it/57it9cmmxnsf1.jpeg?width=1991&format=pjpg&auto=webp&s=60
                 deletedCount += chunkSet.length;
             }
 
-            // Write new videos
+            // Write new videos and see if it works
             let writtenCount = 0;
             for (const chunkSet of chunk(videoDataList, batchSize)) {
                 const batch = writeBatch(db);
