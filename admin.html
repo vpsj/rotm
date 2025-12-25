@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ROTM Admin Dashboard</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -84,12 +84,10 @@ tr:not(:last-child) td {
 }
 
 a { color: #60a5fa; text-decoration: none; }
-a:hover { text-decoration: underline; }
 
-/* TOP 3 STYLES */
-.rank-1 { background: linear-gradient(90deg, #7c6f32, #3a3415); }
-.rank-2 { background: linear-gradient(90deg, #6b7280, #2c303a); }
-.rank-3 { background: linear-gradient(90deg, #7a4a2e, #2f1e14); }
+.rank-1 { background: linear-gradient(90deg,#7c6f32,#3a3415); }
+.rank-2 { background: linear-gradient(90deg,#6b7280,#2c303a); }
+.rank-3 { background: linear-gradient(90deg,#7a4a2e,#2f1e14); }
 
 .rank-badge {
   font-weight: 800;
@@ -101,28 +99,27 @@ a:hover { text-decoration: underline; }
 .silver { background: silver; color: black; }
 .bronze { background: #cd7f32; color: black; }
 
-.tabs {
-  display: flex;
-  gap: 12px;
-  margin: 30px 0 10px;
-}
-
-.tab {
-  cursor: pointer;
-  opacity: 0.6;
-  font-weight: 600;
-}
-
-.tab.active { opacity: 1; }
-
 .hidden { display: none; }
 
-#chart { height: 400px; margin-top: 30px; }
+#chart { height: 420px; margin-top: 30px; }
 
-.footer-actions {
+.template-box {
+  background: #141821;
+  border-radius: 12px;
+  padding: 16px;
   margin-top: 30px;
-  display: flex;
-  justify-content: center;
+}
+
+textarea {
+  width: 100%;
+  min-height: 260px;
+  background: #0f1115;
+  color: #e6e6e6;
+  border: 1px solid #1f2937;
+  border-radius: 8px;
+  padding: 14px;
+  resize: vertical;
+  font-family: monospace;
 }
 </style>
 </head>
@@ -155,7 +152,7 @@ a:hover { text-decoration: underline; }
             <th>Reddit Upvotes</th>
             <th>Upvote Points</th>
             <th>Rating Points</th>
-            <th>Total</th>
+            <th>Total Score</th>
           </tr>
         </thead>
         <tbody id="scoresBody"></tbody>
@@ -181,15 +178,17 @@ a:hover { text-decoration: underline; }
 
     <div id="chart"></div>
 
-    <div class="footer-actions">
-      <button class="secondary" onclick="exportCSV()">Export CSV</button>
+    <div class="template-box">
+      <h3>Reddit Post Template</h3>
+      <textarea id="redditTemplate" readonly></textarea>
+      <br><br>
+      <button class="secondary" onclick="copyTemplate()">Copy Template</button>
     </div>
   </div>
 
 </div>
 
 <script>
-/* ---------- FIREBASE CONFIG ---------- */
 firebase.initializeApp({
   apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
   authDomain: "rotm-rating.firebaseapp.com",
@@ -199,43 +198,34 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-/* ---------- AUTH ---------- */
 auth.onAuthStateChanged(user => {
   if (!user) {
     auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
     return;
   }
-
-  document.getElementById("userInfo").innerText =
-    "Signed in as " + user.email;
-
+  document.getElementById("userInfo").innerText = "Signed in as " + user.email;
   loadScores();
   loadVotes();
 });
 
-auth.getRedirectResult().catch(err => {
-  console.error("Auth redirect error:", err);
-});
-
-/* ---------- UI ---------- */
 function showTab(tab) {
   document.getElementById("scoresTab").classList.toggle("hidden", tab !== "scores");
   document.getElementById("votesTab").classList.toggle("hidden", tab !== "votes");
 }
 
-/* ---------- SCORES ---------- */
 async function loadScores() {
-  const videos = await db.collection("videos").get();
-  const votes = await db.collection("votes").get();
+  const videosSnap = await db.collection("videos").get();
+  const votesSnap = await db.collection("votes").get();
 
   const ratingMap = {};
-  votes.forEach(v => {
+  votesSnap.forEach(v => {
     const d = v.data();
-    ratingMap[d.videoId] = (ratingMap[d.videoId] || 0) + d.rating;
+    if (!ratingMap[d.videoId]) ratingMap[d.videoId] = 0;
+    ratingMap[d.videoId] += d.rating;
   });
 
   const rows = [];
-  videos.forEach(v => {
+  videosSnap.forEach(v => {
     const d = v.data();
     const rating = ratingMap[d.id] || 0;
     const upvotePoints = Math.round(d.upvotes / 10);
@@ -252,11 +242,7 @@ async function loadScores() {
     const tr = document.createElement("tr");
     tr.className = i===0?"rank-1":i===1?"rank-2":i===2?"rank-3":"";
     tr.innerHTML = `
-      <td>
-        <span class="rank-badge ${i===0?"gold":i===1?"silver":i===2?"bronze":""}">
-          ${i+1}
-        </span>
-      </td>
+      <td><span class="rank-badge ${i===0?"gold":i===1?"silver":i===2?"bronze":""}">${i+1}</span></td>
       <td><a href="${r.redditUrl}" target="_blank">${r.title}</a></td>
       <td>${r.upvotes}</td>
       <td>${r.upvotePoints}</td>
@@ -265,16 +251,16 @@ async function loadScores() {
     `;
     tbody.appendChild(tr);
   });
+
+  buildTemplate(rows);
 }
 
-/* ---------- VOTES ---------- */
 async function loadVotes() {
   const snap = await db.collection("votes").orderBy("createdAt","desc").get();
   const body = document.getElementById("votesBody");
   body.innerHTML = "";
 
   const chartData = [["Video","Rating"]];
-
   snap.forEach(v=>{
     const d=v.data();
     body.innerHTML += `
@@ -291,12 +277,34 @@ async function loadVotes() {
   google.charts.load("current",{packages:["corechart"]});
   google.charts.setOnLoadCallback(()=>{
     const data = google.visualization.arrayToDataTable(chartData);
-    const chart = new google.visualization.ColumnChart(document.getElementById("chart"));
-    chart.draw(data,{backgroundColor:"transparent",legend:{textStyle:{color:"#fff"}},hAxis:{textStyle:{color:"#fff"}},vAxis:{textStyle:{color:"#fff"}}});
+    new google.visualization.ColumnChart(document.getElementById("chart"))
+      .draw(data,{backgroundColor:"transparent"});
   });
 }
 
-/* ---------- ADMIN ACTIONS ---------- */
+function buildTemplate(rows) {
+  if (!rows.length) return;
+  const winner = rows[0];
+  const others = rows.slice(1,4);
+
+  document.getElementById("redditTemplate").value =
+`🏆 RailFan of the Month 🏆
+
+Winner: **${winner.title}**
+
+Congratulations to the creator for topping this month's ROTM rankings!
+
+Other close contenders:
+${others.map(v=>`• ${v.title}`).join("\n")}
+`;
+}
+
+function copyTemplate() {
+  const t=document.getElementById("redditTemplate");
+  t.select();
+  document.execCommand("copy");
+}
+
 function resetVotes() {
   if(!confirm("This will DELETE ALL votes. Continue?")) return;
   db.collection("votes").get().then(s=>{
@@ -307,16 +315,7 @@ function resetVotes() {
 }
 
 function updateFromLinks() {
-  alert("Update triggered. GitHub Action will handle fetch.");
-}
-
-function exportCSV() {
-  window.open("data:text/csv;charset=utf-8," + encodeURIComponent(
-    "user,video,rating\n" +
-    [...document.querySelectorAll("#votesBody tr")].map(r =>
-      [...r.children].map(c=>c.innerText).join(",")
-    ).join("\n")
-  ));
+  alert("GitHub Action will handle update.");
 }
 
 function logout() {
