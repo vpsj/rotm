@@ -18,7 +18,7 @@ jobs:
           node-version: '20'
 
       - name: Install Dependencies
-  run: npm install node-fetch@2 firebase-admin
+        run: npm install node-fetch@2 firebase-admin
 
       - name: Run Upvote Script
         env:
