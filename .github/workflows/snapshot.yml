@@ -1,0 +1,28 @@
+name: Update Reddit Upvotes
+on:
+  push:
+    paths:
+      - links.json
+  workflow_dispatch:  # allows manual trigger
+
+jobs:
+  fetch-reddit-upvotes:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install node-fetch firebase-admin
+
+      - name: Run Upvote Script
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+        run: node fetch_upvotes.js
