@@ -191,18 +191,18 @@ a:hover { text-decoration: underline; }
 <script>
 /* ---------- FIREBASE CONFIG ---------- */
 firebase.initializeApp({
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_DOMAIN",
-  projectId: "YOUR_PROJECT_ID"
+  apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
+  authDomain: "rotm-rating.firebaseapp.com",
+  projectId: "rotm-rating"
 });
 
 const auth = firebase.auth();
 const db = firebase.firestore();
 
 /* ---------- AUTH ---------- */
-auth.onAuthStateChanged(async user => {
+auth.onAuthStateChanged(user => {
   if (!user) {
-    await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
     return;
   }
 
@@ -211,6 +211,10 @@ auth.onAuthStateChanged(async user => {
 
   loadScores();
   loadVotes();
+});
+
+auth.getRedirectResult().catch(err => {
+  console.error("Auth redirect error:", err);
 });
 
 /* ---------- UI ---------- */
