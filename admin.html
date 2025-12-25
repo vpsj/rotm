@@ -2,274 +2,323 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>ROTM Admin Dashboard</title>
 
-<style>
-:root {
-  --bg: #0f1115;
-  --card: #181b22;
-  --text: #e6e6e6;
-  --muted: #9aa0a6;
-  --accent: #4da3ff;
-  --gold: #d4af37;
-  --silver: #c0c0c0;
-  --bronze: #cd7f32;
-}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+
+<style>
+* { box-sizing: border-box; }
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+  font-family: Inter, system-ui, sans-serif;
+  background: #0f1115;
+  color: #e6e6e6;
 }
 
 header {
-  padding: 1rem;
+  padding: 24px;
   text-align: center;
-  font-size: 1.4rem;
-  font-weight: 600;
 }
 
-#authStatus {
-  text-align: center;
-  margin: 1rem 0;
+h1 { margin-bottom: 6px; }
+.sub { opacity: 0.7; font-size: 14px; }
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 20px 0;
 }
 
 button {
-  background: var(--accent);
   border: none;
-  color: #fff;
-  padding: 0.6rem 1rem;
+  padding: 10px 16px;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.95rem;
+  font-weight: 600;
 }
 
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
+.primary { background: #3b82f6; color: white; }
+.secondary { background: #374151; color: white; }
+.danger { background: #dc2626; color: white; }
 
 .container {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: auto;
-  padding: 1rem;
+  padding: 0 16px 40px;
 }
 
-.card {
-  background: var(--card);
-  border-radius: 10px;
-  padding: 1rem;
+.table-wrap {
+  background: #141821;
+  border-radius: 12px;
+  overflow-x: auto;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
 }
 
 th, td {
-  padding: 0.6rem;
-  border-bottom: 1px solid #2a2f3a;
-  text-align: center;
+  padding: 14px;
+  text-align: left;
+  white-space: nowrap;
 }
 
 th {
-  color: var(--muted);
+  background: #1c2230;
+  font-weight: 700;
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+tr:not(:last-child) td {
+  border-bottom: 1px solid #1f2937;
+}
+
+a { color: #60a5fa; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* TOP 3 STYLES */
+.rank-1 { background: linear-gradient(90deg, #7c6f32, #3a3415); }
+.rank-2 { background: linear-gradient(90deg, #6b7280, #2c303a); }
+.rank-3 { background: linear-gradient(90deg, #7a4a2e, #2f1e14); }
+
+.rank-badge {
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.gold { background: gold; color: black; }
+.silver { background: silver; color: black; }
+.bronze { background: #cd7f32; color: black; }
+
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin: 30px 0 10px;
+}
+
+.tab {
+  cursor: pointer;
+  opacity: 0.6;
   font-weight: 600;
 }
 
-tr.top1 { background: rgba(212,175,55,0.15); }
-tr.top2 { background: rgba(192,192,192,0.15); }
-tr.top3 { background: rgba(205,127,50,0.15); }
+.tab.active { opacity: 1; }
 
-.mobile-scroll {
-  overflow-x: auto;
-}
+.hidden { display: none; }
 
-@media (max-width: 700px) {
-  table {
-    font-size: 0.8rem;
-  }
+#chart { height: 400px; margin-top: 30px; }
+
+.footer-actions {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
 }
 </style>
 </head>
 
 <body>
-<header>ROTM Admin Dashboard</header>
 
-<div id="authStatus">Checking authentication...</div>
-<div style="text-align:center;">
-  <button id="loginBtn" style="display:none;">Login with Google</button>
-</div>
+<header>
+  <h1>ROTM Admin Dashboard</h1>
+  <div class="sub" id="userInfo">Checking authentication…</div>
 
-<div id="adminContent" style="display:none;" class="container">
-  <div class="card mobile-scroll">
-    <table id="rankingTable">
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Video</th>
-          <th>Reddit<br>Upvotes</th>
-          <th>Upvote<br>Points</th>
-          <th>Rating<br>Points</th>
-          <th>Total</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+  <div class="actions">
+    <button class="primary" onclick="showTab('scores')">Scores</button>
+    <button class="secondary" onclick="showTab('votes')">Detailed Votes & Stats</button>
+    <button class="secondary" onclick="updateFromLinks()">Update Videos from links.json</button>
+    <button class="danger" onclick="resetVotes()">Reset All Votes</button>
+    <button class="secondary" onclick="logout()">Logout</button>
   </div>
+</header>
+
+<div class="container">
+
+  <!-- SCORES -->
+  <div id="scoresTab">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Video</th>
+            <th>Reddit Upvotes</th>
+            <th>Upvote Points</th>
+            <th>Rating Points</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody id="scoresBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VOTES -->
+  <div id="votesTab" class="hidden">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Video</th>
+            <th>Rating</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody id="votesBody"></tbody>
+      </table>
+    </div>
+
+    <div id="chart"></div>
+
+    <div class="footer-actions">
+      <button class="secondary" onclick="exportCSV()">Export CSV</button>
+    </div>
+  </div>
+
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-
-/* Firebase config */
-const firebaseConfig = {
-  apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
-  authDomain: "rotm-rating.firebaseapp.com",
-  projectId: "rotm-rating",
-  storageBucket: "rotm-rating.firebasestorage.app",
-  messagingSenderId: "219038953244",
-  appId: "1:219038953244:web:fee4db5c59ed2909e294d9"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
-
-const adminEmails = ["vpsjdon@gmail.com"];
-
-const authStatus = document.getElementById("authStatus");
-const loginBtn = document.getElementById("loginBtn");
-const adminContent = document.getElementById("adminContent");
-const tbody = document.querySelector("#rankingTable tbody");
-
-/* Auth */
-loginBtn.onclick = async () => {
-  try {
-    await signInWithPopup(auth, provider);
-  } catch (e) {
-    alert("Login failed");
-    console.error(e);
-  }
-};
-
-onAuthStateChanged(auth, user => {
-  if (!user) {
-    authStatus.textContent = "Please log in to continue.";
-    loginBtn.style.display = "inline-block";
-    adminContent.style.display = "none";
-    return;
-  }
-
-  if (!adminEmails.includes(user.email)) {
-    authStatus.textContent = "Access denied.";
-    adminContent.style.display = "none";
-    return;
-  }
-
-  authStatus.textContent = "Signed in as " + user.email;
-  loginBtn.style.display = "none";
-  adminContent.style.display = "block";
-  initDashboard();
+<script>
+/* ---------- FIREBASE CONFIG ---------- */
+firebase.initializeApp({
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
 });
 
-/* Dashboard logic */
-function initDashboard() {
-  const videosCol = collection(db, "videos");
-  const votesCol = collection(db, "votes");
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-  let videos = {};
-  let votes = [];
-
-  onSnapshot(videosCol, snap => {
-    videos = {};
-    snap.forEach(d => {
-      videos[d.id] = {
-        ...d.data(),
-        upvotePoints: 0,
-        votePoints: 0,
-        total: 0
-      };
-    });
-    recalc();
-  });
-
-  onSnapshot(votesCol, snap => {
-    votes = snap.docs.map(d => d.data());
-    recalc();
-  });
-
-  function recalc() {
-    if (Object.keys(videos).length === 0) return;
-
-    /* Reset */
-    Object.values(videos).forEach(v => {
-      v.upvotePoints = 0;
-      v.votePoints = 0;
-      v.total = 0;
-    });
-
-    /* Rating points */
-    votes.forEach(vote => {
-      if (!vote.ratings) return;
-      for (const [vid, rating] of Object.entries(vote.ratings)) {
-        if (videos[vid]) {
-          videos[vid].votePoints += rating * 10;
-        }
-      }
-    });
-
-    /* Upvote points (rank-based) */
-    const sortedByUpvotes = Object.values(videos)
-      .sort((a, b) => b.upvotes - a.upvotes);
-
-    const step = 10;
-    sortedByUpvotes.forEach((v, i) => {
-      v.upvotePoints = step * (sortedByUpvotes.length - i);
-    });
-
-    /* Total */
-    Object.values(videos).forEach(v => {
-      v.total = v.votePoints + v.upvotePoints;
-    });
-
-    render();
+/* ---------- AUTH ---------- */
+auth.onAuthStateChanged(async user => {
+  if (!user) {
+    await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    return;
   }
 
-  function render() {
-    tbody.innerHTML = "";
+  document.getElementById("userInfo").innerText =
+    "Signed in as " + user.email;
 
-    const sorted = Object.entries(videos)
-      .sort((a, b) => b[1].total - a[1].total);
+  loadScores();
+  loadVotes();
+});
 
-    sorted.forEach(([id, v], i) => {
-      const tr = document.createElement("tr");
-      if (i === 0) tr.classList.add("top1");
-      if (i === 1) tr.classList.add("top2");
-      if (i === 2) tr.classList.add("top3");
+/* ---------- UI ---------- */
+function showTab(tab) {
+  document.getElementById("scoresTab").classList.toggle("hidden", tab !== "scores");
+  document.getElementById("votesTab").classList.toggle("hidden", tab !== "votes");
+}
 
-      tr.innerHTML = `
-        <td>${i + 1}</td>
-        <td style="text-align:left;">
-          <a href="${v.redditUrl}" target="_blank" style="color:#4da3ff;text-decoration:none;">
-            ${v.title}
-          </a>
-        </td>
-        <td>${v.upvotes ?? 0}</td>
-        <td>${v.upvotePoints}</td>
-        <td>${v.votePoints}</td>
-        <td><strong>${v.total}</strong></td>
-      `;
-      tbody.appendChild(tr);
-    });
-  }
+/* ---------- SCORES ---------- */
+async function loadScores() {
+  const videos = await db.collection("videos").get();
+  const votes = await db.collection("votes").get();
+
+  const ratingMap = {};
+  votes.forEach(v => {
+    const d = v.data();
+    ratingMap[d.videoId] = (ratingMap[d.videoId] || 0) + d.rating;
+  });
+
+  const rows = [];
+  videos.forEach(v => {
+    const d = v.data();
+    const rating = ratingMap[d.id] || 0;
+    const upvotePoints = Math.round(d.upvotes / 10);
+    const total = upvotePoints + rating;
+    rows.push({ ...d, rating, upvotePoints, total });
+  });
+
+  rows.sort((a,b)=>b.total-a.total);
+
+  const tbody = document.getElementById("scoresBody");
+  tbody.innerHTML = "";
+
+  rows.forEach((r,i)=>{
+    const tr = document.createElement("tr");
+    tr.className = i===0?"rank-1":i===1?"rank-2":i===2?"rank-3":"";
+    tr.innerHTML = `
+      <td>
+        <span class="rank-badge ${i===0?"gold":i===1?"silver":i===2?"bronze":""}">
+          ${i+1}
+        </span>
+      </td>
+      <td><a href="${r.redditUrl}" target="_blank">${r.title}</a></td>
+      <td>${r.upvotes}</td>
+      <td>${r.upvotePoints}</td>
+      <td>${r.rating}</td>
+      <td><b>${r.total}</b></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ---------- VOTES ---------- */
+async function loadVotes() {
+  const snap = await db.collection("votes").orderBy("createdAt","desc").get();
+  const body = document.getElementById("votesBody");
+  body.innerHTML = "";
+
+  const chartData = [["Video","Rating"]];
+
+  snap.forEach(v=>{
+    const d=v.data();
+    body.innerHTML += `
+      <tr>
+        <td>${d.userId}</td>
+        <td>${d.videoTitle}</td>
+        <td>${d.rating}</td>
+        <td>${d.createdAt?.toDate().toLocaleString()||""}</td>
+      </tr>
+    `;
+    chartData.push([d.videoTitle, d.rating]);
+  });
+
+  google.charts.load("current",{packages:["corechart"]});
+  google.charts.setOnLoadCallback(()=>{
+    const data = google.visualization.arrayToDataTable(chartData);
+    const chart = new google.visualization.ColumnChart(document.getElementById("chart"));
+    chart.draw(data,{backgroundColor:"transparent",legend:{textStyle:{color:"#fff"}},hAxis:{textStyle:{color:"#fff"}},vAxis:{textStyle:{color:"#fff"}}});
+  });
+}
+
+/* ---------- ADMIN ACTIONS ---------- */
+function resetVotes() {
+  if(!confirm("This will DELETE ALL votes. Continue?")) return;
+  db.collection("votes").get().then(s=>{
+    const batch=db.batch();
+    s.forEach(d=>batch.delete(d.ref));
+    batch.commit().then(()=>location.reload());
+  });
+}
+
+function updateFromLinks() {
+  alert("Update triggered. GitHub Action will handle fetch.");
+}
+
+function exportCSV() {
+  window.open("data:text/csv;charset=utf-8," + encodeURIComponent(
+    "user,video,rating\n" +
+    [...document.querySelectorAll("#votesBody tr")].map(r =>
+      [...r.children].map(c=>c.innerText).join(",")
+    ).join("\n")
+  ));
+}
+
+function logout() {
+  auth.signOut().then(()=>location.reload());
 }
 </script>
+
 </body>
 </html>
