@@ -3,188 +3,62 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>RailFan of the Month | Rate Videos</title>
+<title>RailFan of the Month</title>
 
 <style>
-:root {
-  --bg: #0f1115;
-  --card: #181b22;
-  --text: #e6e6e6;
-  --muted: #9aa0a6;
-  --accent: #4da3ff;
-  --danger: #ff6b6b;
-  --border: #2a2f3a;
+body{
+  margin:0;
+  background:#0f1115;
+  color:#e6e6e6;
+  font-family:system-ui,sans-serif;
 }
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
+header{text-align:center;padding:2rem 1rem}
+ul{list-style-position:inside;text-align:left;max-width:720px;margin:auto;color:#9aa0a6}
+.container{max-width:1100px;margin:auto;padding:1rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+.card{
+  background:#181b22;
+  border:1px solid #2a2f3a;
+  border-radius:14px;
+  padding:1rem;
 }
-
-/* ---------- HEADER ---------- */
-header {
-  text-align: center;
-  padding: 2rem 1rem 1rem;
+.card.unrated{border-color:#ff6b6b}
+.card h3{margin:0;font-size:1rem}
+.card a{color:#4da3ff;text-decoration:none;font-size:.9rem}
+.slider-row{display:flex;gap:.8rem;align-items:center}
+input[type=range]{flex:1}
+.rating-value{
+  width:42px;height:42px;border-radius:50%;
+  background:#4da3ff;color:#000;font-weight:800;
+  display:none;align-items:center;justify-content:center
 }
-
-header h1 {
-  margin: 0;
-  font-size: 2rem;
+.footer{text-align:center;margin:2rem}
+button{
+  background:#4da3ff;color:#000;
+  border:none;border-radius:12px;
+  padding:.8rem 1.6rem;font-weight:700
 }
-
-.instructions {
-  max-width: 720px;
-  margin: 1rem auto 0;
-}
-
-.instructions ul {
-  list-style-position: inside;
-  padding: 0;
-  text-align: left;
-  margin: 0 auto;
-}
-
-.instructions li {
-  margin: 0.4rem 0;
-  color: var(--muted);
-}
-
-/* ---------- LAYOUT ---------- */
-.container {
-  max-width: 1100px;
-  margin: auto;
-  padding: 1rem;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1rem;
-}
-
-/* ---------- VIDEO CARD ---------- */
-.card {
-  background: var(--card);
-  border-radius: 14px;
-  padding: 1rem;
-  border: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
-}
-
-.card.unrated {
-  border-color: var(--danger);
-}
-
-.card h3 {
-  font-size: 1rem;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.card a {
-  color: var(--accent);
-  font-size: 0.9rem;
-  text-decoration: none;
-}
-
-/* ---------- RATING ---------- */
-.rating-box {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.slider-row {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-}
-
-input[type="range"] {
-  flex: 1;
-  accent-color: var(--accent);
-}
-
-.rating-value {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: #000;
-  font-weight: 800;
-  font-size: 1.1rem;
-  display: none;
-  align-items: center;
-  justify-content: center;
-}
-
-.rating-label {
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-/* ---------- FOOTER ---------- */
-.footer {
-  text-align: center;
-  margin: 2rem 0 3rem;
-}
-
-button {
-  background: var(--accent);
-  color: #000;
-  border: none;
-  padding: 0.9rem 1.8rem;
-  border-radius: 12px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-#progress {
-  margin-top: 0.6rem;
-  font-size: 0.9rem;
-  color: var(--muted);
-}
-
-#message {
-  margin-top: 1rem;
-  font-weight: 600;
-}
+button:disabled{opacity:.5}
 </style>
 </head>
 
 <body>
 
 <header>
-  <h1>RailFan of the Month</h1>
-
-  <div class="instructions">
-    <ul>
-      <li>Rate every video from <strong>1 to 10</strong> based on video quality, authenticity, sound, and overall appeal</li>
-      <li>Authentic track sound is preferred over background music</li>
-      <li>You <strong>must rate all videos</strong> to submit</li>
-    </ul>
-  </div>
+<h1>RailFan of the Month</h1>
+<ul>
+<li>Rate every video from <b>1 to 10</b> based on quality, authenticity, sound and appeal</li>
+<li>Authentic track sound is preferred over background music</li>
+<li>You <b>must rate all videos</b> to submit</li>
+</ul>
 </header>
 
 <div class="container">
-  <div id="videoGrid" class="grid"></div>
-
+  <div id="grid" class="grid"></div>
   <div class="footer">
-    <button id="submitBtn" disabled>Submit Ratings</button>
+    <button id="submit" disabled>Submit Ratings</button>
     <div id="progress">0 / 0 videos rated</div>
-    <div id="message"></div>
+    <div id="msg"></div>
   </div>
 </div>
 
@@ -192,7 +66,7 @@ button:disabled {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-/* ---- Firebase Config (UNCHANGED) ---- */
+/* EXACT CONFIG – UNCHANGED */
 const firebaseConfig = {
   apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
   authDomain: "rotm-rating.firebaseapp.com",
@@ -205,84 +79,59 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const videoGrid = document.getElementById("videoGrid");
-const submitBtn = document.getElementById("submitBtn");
-const progressEl = document.getElementById("progress");
-const messageEl = document.getElementById("message");
+const grid=document.getElementById("grid");
+const submit=document.getElementById("submit");
+const progress=document.getElementById("progress");
+const msg=document.getElementById("msg");
 
-const ratings = {};
-let totalVideos = 0;
+const ratings={};
+let total=0;
 
-/* ---------- LOAD VIDEOS ---------- */
-async function loadVideos() {
-  const snap = await getDocs(collection(db, "videos"));
-  totalVideos = snap.size;
-  progressEl.textContent = `0 / ${totalVideos} videos rated`;
+const snap=await getDocs(collection(db,"videos"));
+total=snap.size;
+progress.textContent=`0 / ${total} videos rated`;
 
-  snap.forEach(doc => {
-    const v = doc.data();
-    const id = doc.id;
+snap.forEach(doc=>{
+  const v=doc.data();
+  const id=doc.id;
 
-    const card = document.createElement("div");
-    card.className = "card unrated";
-    card.dataset.id = id;
+  const card=document.createElement("div");
+  card.className="card unrated";
+  card.innerHTML=`
+    <h3>${v.title}</h3>
+    <a href="${v.redditUrl}" target="_blank">View on Reddit</a>
+    <div class="slider-row">
+      <input type="range" min="1" max="10" step="1">
+      <div class="rating-value"></div>
+    </div>
+  `;
 
-    card.innerHTML = `
-      <h3>${v.title}</h3>
-      <a href="${v.redditUrl}" target="_blank">View on Reddit</a>
+  const slider=card.querySelector("input");
+  const bubble=card.querySelector(".rating-value");
 
-      <div class="rating-box">
-        <div class="slider-row">
-          <input type="range" min="1" max="10" step="1">
-          <div class="rating-value"></div>
-        </div>
-        <div class="rating-label">Drag to rate (1 = worst, 10 = best)</div>
-      </div>
-    `;
-
-    const slider = card.querySelector("input");
-    const bubble = card.querySelector(".rating-value");
-
-    slider.addEventListener("input", () => {
-      bubble.style.display = "flex";
-      bubble.textContent = slider.value;
-      ratings[id] = Number(slider.value);
-      card.classList.remove("unrated");
-      updateProgress();
-    });
-
-    videoGrid.appendChild(card);
+  slider.addEventListener("input",()=>{
+    bubble.style.display="flex";
+    bubble.textContent=slider.value;
+    ratings[id]=Number(slider.value);
+    card.classList.remove("unrated");
+    const done=Object.keys(ratings).length;
+    progress.textContent=`${done} / ${total} videos rated`;
+    submit.disabled=done!==total;
   });
-}
 
-/* ---------- PROGRESS ---------- */
-function updateProgress() {
-  const rated = Object.keys(ratings).length;
-  progressEl.textContent = `${rated} / ${totalVideos} videos rated`;
-  submitBtn.disabled = rated !== totalVideos;
-}
-
-/* ---------- SUBMIT ---------- */
-submitBtn.addEventListener("click", async () => {
-  submitBtn.disabled = true;
-  messageEl.textContent = "Submitting ratings...";
-
-  try {
-    await addDoc(collection(db, "votes"), {
-      userId: "anon_" + crypto.randomUUID(),
-      ratings,
-      createdAt: serverTimestamp()
-    });
-
-    messageEl.textContent = "✅ Ratings submitted successfully. Thank you!";
-  } catch (err) {
-    console.error(err);
-    messageEl.textContent = "❌ Submission failed. Please retry.";
-    submitBtn.disabled = false;
-  }
+  grid.appendChild(card);
 });
 
-loadVideos();
+submit.onclick=async()=>{
+  submit.disabled=true;
+  msg.textContent="Submitting...";
+  await addDoc(collection(db,"votes"),{
+    userId:"anon_"+crypto.randomUUID(),
+    ratings,
+    createdAt:serverTimestamp()
+  });
+  msg.textContent="✅ Ratings submitted";
+};
 </script>
 
 </body>
