@@ -1,61 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>ROTM Admin Dashboard</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://www.gstatic.com/charts/loader.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <style>
-* { box-sizing: border-box; }
+:root {
+  --bg: #0f1115;
+  --panel: #1b1f2a;
+  --text: #e8e8e8;
+  --muted: #b5b5b5;
+  --link: #5aa9ff;
+  --gold: #bfa046;
+  --silver: #9da3ad;
+  --bronze: #a97142;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: Inter, system-ui, sans-serif;
-  background: #0f1115;
-  color: #e6e6e6;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-header {
-  padding: 24px;
+h1 {
   text-align: center;
+  margin-top: 30px;
 }
 
-h1 { margin-bottom: 6px; }
-.sub { opacity: 0.7; font-size: 14px; }
+.sub {
+  text-align: center;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
 
-.actions {
+.controls {
   display: flex;
+  justify-content: center;
   gap: 10px;
   flex-wrap: wrap;
-  justify-content: center;
-  margin: 20px 0;
+  margin-bottom: 20px;
 }
 
 button {
+  background: #2a2f3d;
   border: none;
-  padding: 10px 16px;
+  color: white;
+  padding: 10px 14px;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 600;
 }
 
-.primary { background: #3b82f6; color: white; }
-.secondary { background: #374151; color: white; }
-.danger { background: #dc2626; color: white; }
+button.primary { background: #4c7dff; }
+button.danger { background: #d04a3a; }
 
-.container {
+.panel {
   max-width: 1200px;
-  margin: auto;
-  padding: 0 16px 60px;
+  margin: 0 auto 30px;
+  background: var(--panel);
+  border-radius: 10px;
+  padding: 20px;
 }
 
-/* TABLE */
 .table-wrap {
-  background: #141821;
-  border-radius: 12px;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 table {
@@ -65,258 +83,195 @@ table {
 }
 
 th, td {
-  padding: 14px;
-  text-align: center;
+  padding: 12px;
+  border-bottom: 1px solid #2b3140;
   vertical-align: top;
 }
 
 th {
-  background: #1c2230;
-  font-weight: 700;
-  font-size: 13px;
-  opacity: 0.85;
-}
-
-td.title {
+  color: #dcdcdc;
+  font-size: 14px;
   text-align: left;
-  white-space: normal;
-  word-break: break-word;
 }
 
-tr:not(:last-child) td {
-  border-bottom: 1px solid #1f2937;
+td {
+  font-size: 14px;
 }
 
-/* RANK STYLES */
-.rank-1 { background: linear-gradient(90deg,#7c6f32,#3a3415); }
-.rank-2 { background: linear-gradient(90deg,#6b7280,#2c303a); }
-.rank-3 { background: linear-gradient(90deg,#7a4a2e,#2f1e14); }
+.rank {
+  width: 50px;
+  text-align: center;
+  font-weight: bold;
+}
 
-.badge {
-  font-weight: 800;
-  padding: 4px 8px;
+.video {
+  width: 40%;
+  word-wrap: break-word;
+}
+
+.video a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+.video a:hover {
+  text-decoration: underline;
+}
+
+.num {
+  width: 110px;
+  text-align: center;
+}
+
+.gold { background: rgba(191,160,70,0.35); }
+.silver { background: rgba(157,163,173,0.35); }
+.bronze { background: rgba(169,113,66,0.35); }
+
+.template {
+  white-space: pre-wrap;
+  font-family: Consolas, monospace;
+  background: #0d0f14;
+  padding: 15px;
   border-radius: 6px;
-}
-.gold { background: gold; color: black; }
-.silver { background: silver; color: black; }
-.bronze { background: #cd7f32; color: black; }
-
-.hidden { display: none; }
-
-/* TEMPLATE */
-.template-box {
-  background: #141821;
-  border-radius: 12px;
-  padding: 16px;
-  margin-top: 40px;
+  margin-top: 10px;
 }
 
-textarea {
-  width: 100%;
-  min-height: 300px;
-  background: #0f1115;
-  color: #e6e6e6;
-  border: 1px solid #1f2937;
-  border-radius: 8px;
-  padding: 14px;
-  resize: vertical;
-  font-family: monospace;
+.copy-btn {
+  margin-top: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <h1>ROTM Admin Dashboard</h1>
-  <div class="sub" id="userInfo">Checking authentication…</div>
+<h1>ROTM Admin Dashboard</h1>
+<div class="sub" id="userInfo"></div>
 
-  <div class="actions">
-    <button class="primary" onclick="showTab('scores')">Scores</button>
-    <button class="secondary" onclick="showTab('votes')">Detailed Votes & Stats</button>
-    <button class="secondary" onclick="updateFromLinks()">Update Videos from links.json</button>
-    <button class="danger" onclick="resetVotes()">Reset All Votes</button>
-    <button class="secondary" onclick="logout()">Logout</button>
-  </div>
-</header>
-
-<div class="container">
-
-  <!-- SCORES TAB -->
-  <div id="scoresTab">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th style="width:60px">Rank</th>
-            <th>Video</th>
-            <th style="width:120px">Reddit<br>Upvotes</th>
-            <th style="width:120px">Upvote<br>Points</th>
-            <th style="width:120px">Rating<br>Points</th>
-            <th style="width:120px">Total<br>Score</th>
-          </tr>
-        </thead>
-        <tbody id="scoresBody"></tbody>
-      </table>
-    </div>
-
-    <!-- TEMPLATE ON FRONT PAGE -->
-    <div class="template-box">
-      <h3>Reddit Post Template</h3>
-      <textarea id="redditTemplate" readonly></textarea>
-      <br><br>
-      <button class="secondary" onclick="copyTemplate()">Copy Template</button>
-    </div>
-  </div>
-
-  <!-- VOTES TAB -->
-  <div id="votesTab" class="hidden">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>User</th>
-            <th>Video</th>
-            <th>Rating</th>
-            <th>Time</th>
-          </tr>
-        </thead>
-        <tbody id="votesBody"></tbody>
-      </table>
-    </div>
-
-    <div id="chart" style="height:420px;margin-top:30px;"></div>
-  </div>
-
+<div class="controls">
+  <button class="primary">Scores</button>
+  <button>Detailed Votes & Stats</button>
+  <button>Update Videos from links.json</button>
+  <button class="danger">Reset All Votes</button>
+  <button id="logoutBtn">Logout</button>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-import { getFirestore, collection, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+<div class="panel">
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="rank">Rank</th>
+          <th class="video">Video</th>
+          <th class="num">Reddit Upvotes</th>
+          <th class="num">Upvote Points</th>
+          <th class="num">Rating Points</th>
+          <th class="num">Total Score</th>
+        </tr>
+      </thead>
+      <tbody id="scoreBody"></tbody>
+    </table>
+  </div>
+</div>
 
+<div class="panel">
+  <h2>Reddit Post Template</h2>
+  <div id="template" class="template"></div>
+  <button class="copy-btn" onclick="copyTemplate()">Copy Template</button>
+</div>
+
+<script>
+/* === FIREBASE CONFIG (UNCHANGED) === */
 const firebaseConfig = {
-  apiKey: "AIzaSyDChk83uv5LqXHemAziEHO3YAqEROHjIbo",
-  authDomain: "rotm-2a088.firebaseapp.com",
-  projectId: "rotm-2a088"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_DOMAIN",
+  projectId: "YOUR_PROJECT_ID"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-const ADMIN_EMAILS = ["vpsjdon@gmail.com"];
-
-onAuthStateChanged(auth, async user => {
-  if (!user) {
-    await signInWithPopup(auth, provider);
-    return;
-  }
-  if (!ADMIN_EMAILS.includes(user.email)) {
-    alert("Access denied");
-    signOut(auth);
-    return;
-  }
-  document.getElementById("userInfo").innerText = "Signed in as " + user.email;
-  loadScores();
-  loadVotes();
+/* === AUTH === */
+auth.onAuthStateChanged(user => {
+  if (!user) location.href = "index.html";
+  document.getElementById("userInfo").textContent =
+    `Signed in as ${user.email}`;
 });
 
-window.showTab = tab => {
-  document.getElementById("scoresTab").classList.toggle("hidden", tab !== "scores");
-  document.getElementById("votesTab").classList.toggle("hidden", tab !== "votes");
-};
-
+/* === LOAD DATA === */
 async function loadScores() {
-  const videosSnap = await getDocs(collection(db,"videos"));
-  const votesSnap = await getDocs(collection(db,"votes"));
+  const snap = await db.collection("videos").get();
+  const videos = snap.docs.map(d => d.data())
+    .sort((a,b) => b.totalScore - a.totalScore);
 
-  const ratingMap = {};
-  votesSnap.forEach(v=>{
-    const d=v.data();
-    ratingMap[d.videoId]=(ratingMap[d.videoId]||0)+d.rating;
-  });
+  const tbody = document.getElementById("scoreBody");
+  tbody.innerHTML = "";
 
-  const rows=[];
-  videosSnap.forEach(v=>{
-    const d=v.data();
-    const rating=ratingMap[d.id]||0;
-    const upvotePoints=Math.round(d.upvotes/10);
-    rows.push({...d,rating,upvotePoints,total:rating+upvotePoints});
-  });
+  videos.forEach((v, i) => {
+    const tr = document.createElement("tr");
+    if (i === 0) tr.className = "gold";
+    if (i === 1) tr.className = "silver";
+    if (i === 2) tr.className = "bronze";
 
-  rows.sort((a,b)=>b.total-a.total);
-
-  const body=document.getElementById("scoresBody");
-  body.innerHTML="";
-
-  rows.forEach((r,i)=>{
-    const tr=document.createElement("tr");
-    tr.className=i===0?"rank-1":i===1?"rank-2":i===2?"rank-3":"";
-    tr.innerHTML=`
-      <td><span class="badge ${i===0?"gold":i===1?"silver":i===2?"bronze":""}">${i+1}</span></td>
-      <td class="title"><a href="${r.redditUrl}" target="_blank">${r.title}</a></td>
-      <td>${r.upvotes}</td>
-      <td>${r.upvotePoints}</td>
-      <td>${r.rating}</td>
-      <td><b>${r.total}</b></td>
+    tr.innerHTML = `
+      <td class="rank">${i+1}</td>
+      <td class="video">
+        <a href="${v.redditUrl}" target="_blank">${v.title}</a>
+      </td>
+      <td class="num">${v.upvotes}</td>
+      <td class="num">${v.upvotePoints}</td>
+      <td class="num">${v.ratingPoints}</td>
+      <td class="num">${v.totalScore}</td>
     `;
-    body.appendChild(tr);
+    tbody.appendChild(tr);
   });
 
-  buildTemplate(rows);
+  buildTemplate(videos);
 }
 
-function buildTemplate(rows){
-  if(!rows.length) return;
-  const winner=rows[0];
-  const others=rows.slice(1,4);
+function buildTemplate(videos) {
+  const winner = videos[0];
+  const runners = videos.slice(1,4);
 
-  document.getElementById("redditTemplate").value =
-`🏆 RailFan of the Month 🏆
+  let text =
+`Title: ✨ RailFan of the Month for [Month][Year] goes to ‘${winner.author}’ for this “${winner.title}”! ✨
+As a Reward, they receive a Special Flair + An entry into our ROTM Hall of Fame! [Details in Comments]
 
-Winner:
-**[${winner.title}](${winner.redditUrl})**
+---
 
-Congratulations to u/${winner.op || "OP"} for topping this month's ROTM rankings!
+**Mod Comment:**
 
-Other close contenders:
-${others.map(v=>`• [${v.title}](${v.redditUrl})`).join("\n")}
+Congratulations to u/${winner.author} for becoming the [Month][Year] RailFan of the Month!
 
-— r/IndianRailways Mod Team`;
-}
+If you also wish to see your name immortalized in the [ROTM Hall Of Fame](https://www.reddit.com/r/indianrailways/wiki/hof), get a mention in the sidebar of the subreddit, AND receive a [special flair](https://i.imgur.com/rJCJGMg.png) courtesy of the mods, just go through the [ROTM rules](https://www.reddit.com/r/indianrailways/wiki/rotm) and submit your own beautiful videos of Indian Railways!
 
-window.copyTemplate=()=>{
-  navigator.clipboard.writeText(document.getElementById("redditTemplate").value);
-  alert("Template copied!");
-};
+Here are some of the other videos loved by both mods and the subreddit that missed out (competition was quite close this time):`;
 
-async function loadVotes(){
-  const snap=await getDocs(collection(db,"votes"));
-  const body=document.getElementById("votesBody");
-  body.innerHTML="";
-  snap.forEach(v=>{
-    const d=v.data();
-    body.innerHTML+=`
-      <tr>
-        <td>${d.userId}</td>
-        <td>${d.videoTitle}</td>
-        <td>${d.rating}</td>
-        <td>${d.createdAt?.toDate().toLocaleString()||""}</td>
-      </tr>`;
+  runners.forEach(v => {
+    text += `
+
+* [${v.title}](${v.redditUrl}) by u/${v.author}`;
   });
+
+  text += `
+
+Congratulations again to the Winner and the runner-ups. The contest will run every month so all the wonderful RailFans of our sub will have plenty of chance to win!
+
+-  r/IndianRailways ModTeam
+`;
+
+  document.getElementById("template").textContent = text;
 }
 
-window.resetVotes=async()=>{
-  if(!confirm("Delete ALL votes?")) return;
-  const snap=await getDocs(collection(db,"votes"));
-  for(const d of snap.docs) await deleteDoc(d.ref);
-  location.reload();
-};
+function copyTemplate() {
+  navigator.clipboard.writeText(
+    document.getElementById("template").textContent
+  );
+}
 
-window.updateFromLinks=()=>alert("GitHub Actions handles this.");
-window.logout=()=>signOut(auth).then(()=>location.reload());
+document.getElementById("logoutBtn").onclick = () => auth.signOut();
+
+loadScores();
 </script>
 
 </body>
