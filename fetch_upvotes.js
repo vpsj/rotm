@@ -1,17 +1,19 @@
 const admin = require("firebase-admin");
 const fs = require("fs");
+const fetch = require("node-fetch");
 
-// Load service account
-const serviceAccount = require("./serviceAccountKey.json");
-
-// Init Firebase Admin
+// ---- Firebase Admin via ENV (GitHub Actions safe) ----
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n")
+  })
 });
 
 const db = admin.firestore();
 
-// Load links
+// ---- Load links ----
 const links = JSON.parse(fs.readFileSync("links.json", "utf8"));
 
 async function main() {
@@ -23,13 +25,16 @@ async function main() {
       const post = json[0].data.children[0].data;
       const docId = post.id;
 
-      await db.collection("videos").doc(docId).set({
-        id: docId,
-        title: post.title,
-        redditUrl: "https://redd.it/" + docId,
-        upvotes: post.ups,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
-      }, { merge: true });
+      await db.collection("videos").doc(docId).set(
+        {
+          id: docId,
+          title: post.title,
+          redditUrl: "https://redd.it/" + docId,
+          upvotes: post.ups,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
 
       console.log("Saved:", post.title, post.ups);
     } catch (err) {
@@ -38,7 +43,6 @@ async function main() {
   }
 
   console.log("Done.");
-  process.exit(0);
 }
 
 main();
