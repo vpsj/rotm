@@ -1,63 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>RailFan of the Month</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 body{
   margin:0;
   background:#0f1115;
-  color:#f0f0f0;
+  color:#f1f1f1;
   font-family:system-ui,sans-serif;
 }
-header{text-align:center;padding:2rem 1rem}
-ul{max-width:720px;margin:auto;color:#cfd3d7}
-.container{max-width:1100px;margin:auto;padding:1rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem}
+header{text-align:center;padding:2.5rem 1rem}
+h1{margin-bottom:.8rem}
+.subtitle{max-width:720px;margin:auto;text-align:left}
+.subtitle ul{list-style-position:inside;color:#cfd3da}
+.container{max-width:1200px;margin:auto;padding:1rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:1.4rem}
 .card{
-  background:#1b1f27;
-  border:1px solid #2f3542;
+  background:#1a1f27;
   border-radius:14px;
   padding:1rem;
+  box-shadow:0 6px 18px rgba(0,0,0,.45);
 }
-.card.unrated{border-color:#ff6b6b}
-.card h3{margin:.2rem 0;font-size:1rem;color:#ffffff}
-.card a{color:#6fb1ff;text-decoration:none;font-size:.9rem}
+.card h3{margin:.2rem 0 .4rem;font-size:1rem;line-height:1.35}
+.card a{color:#6cb6ff;text-decoration:none;font-size:.9rem}
+video{width:100%;border-radius:10px;margin:.6rem 0}
 .slider-row{display:flex;gap:.8rem;align-items:center;margin-top:.6rem}
 input[type=range]{flex:1}
-.rating-value{
-  width:40px;height:40px;border-radius:50%;
-  background:#6fb1ff;color:#000;font-weight:800;
+.rating-bubble{
+  width:42px;height:42px;border-radius:50%;
+  background:#6cb6ff;color:#000;font-weight:800;
   display:none;align-items:center;justify-content:center
 }
-.footer{text-align:center;margin:2rem}
+.card.unrated{outline:2px solid #ff6b6b}
+.footer{text-align:center;margin:2.5rem 0}
 button{
-  background:#6fb1ff;color:#000;
-  border:none;border-radius:12px;
-  padding:.8rem 1.6rem;font-weight:700
+  background:#6cb6ff;color:#000;
+  border:none;border-radius:14px;
+  padding:.9rem 2rem;font-weight:800;font-size:1rem
 }
-button:disabled{opacity:.4}
+button:disabled{opacity:.5}
+#progress{margin-top:.8rem;color:#cfd3da}
+#msg{margin-top:.6rem;font-weight:700}
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>RailFan of the Month</h1>
-<ul>
-<li>Rate every video from <b>1 to 10</b></li>
-<li>Authentic track sound preferred</li>
-<li>You must rate <b>all videos</b> to submit</li>
-</ul>
+  <h1>RailFan of the Month</h1>
+  <div class="subtitle">
+    <p><b>Rate the videos based on the following criteria:</b></p>
+    <ul>
+      <li>The video quality and cinematography of the clip</li>
+      <li>Authentic track sound over low-effort background music</li>
+      <li>Title of the video, how descriptive and informative it is</li>
+    </ul>
+    <p><b>PS:</b> You must rate all the videos to submit your votes</p>
+  </div>
 </header>
 
 <div class="container">
   <div id="grid" class="grid"></div>
   <div class="footer">
     <button id="submit" disabled>Submit Ratings</button>
-    <div id="progress"></div>
+    <div id="progress">0 / 0 videos rated</div>
     <div id="msg"></div>
   </div>
 </div>
@@ -66,7 +75,7 @@ button:disabled{opacity:.4}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-/* YOUR CONFIG – UNCHANGED */
+/* === YOUR EXACT FIREBASE CONFIG (UNCHANGED) === */
 const firebaseConfig = {
   apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
   authDomain: "rotm-rating.firebaseapp.com",
@@ -79,64 +88,81 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const grid=document.getElementById("grid");
-const submit=document.getElementById("submit");
-const progress=document.getElementById("progress");
-const msg=document.getElementById("msg");
+const grid = document.getElementById("grid");
+const submit = document.getElementById("submit");
+const progress = document.getElementById("progress");
+const msg = document.getElementById("msg");
 
-const ratings={};
-let total=0;
+const ratings = {};
+let total = 0;
 
-const linksRes = await fetch("https://raw.githubusercontent.com/vpsj/rotm/main/links.json");
-const links = await linksRes.json();
+/* === LOAD VIDEOS FROM REDDIT (OLD LOGIC, WORKING) === */
+async function loadVideos(){
+  const res = await fetch("https://raw.githubusercontent.com/vpsj/rotm/main/links.json");
+  const urls = await res.json();
+  total = urls.length;
+  progress.textContent = `0 / ${total} videos rated`;
 
-total = links.length;
-progress.textContent = `0 / ${total} videos rated`;
+  for(const url of urls){
+    const match = url.match(/\/comments\/([a-z0-9]+)\//);
+    const postId = match ? match[1] : null;
 
-for (const url of links) {
-  const res = await fetch(url + ".json");
-  const json = await res.json();
-  const post = json[0].data.children[0].data;
-  const id = post.id;
+    const card = document.createElement("div");
+    card.className = "card unrated";
+    card.innerHTML = "<p>Loading video…</p>";
+    grid.appendChild(card);
 
-  const card=document.createElement("div");
-  card.className="card unrated";
-  card.innerHTML=`
-    <h3>${post.title}</h3>
-    <a href="https://redd.it/${id}" target="_blank">View on Reddit</a>
-    <div class="slider-row">
-      <input type="range" min="1" max="10" step="1">
-      <div class="rating-value"></div>
-    </div>
-  `;
+    try{
+      const r = await fetch(url + ".json");
+      const j = await r.json();
+      const data = j[0].data.children[0].data;
 
-  const slider=card.querySelector("input");
-  const bubble=card.querySelector(".rating-value");
+      const title = data.title || "Untitled";
+      const videoUrl = data?.secure_media?.reddit_video?.fallback_url;
 
-  slider.addEventListener("input",()=>{
-    bubble.style.display="flex";
-    bubble.textContent = slider.value;      
-    ratings[id] = Number(slider.value);     
-    card.classList.remove("unrated");
+      card.innerHTML = `
+        <h3>${title}</h3>
+        ${videoUrl ? `<video src="${videoUrl}" autoplay muted loop playsinline></video>` : "<p>Video unavailable</p>"}
+        <a href="${url}" target="_blank">View on Reddit</a>
+        <div class="slider-row">
+          <input type="range" min="1" max="10" step="1">
+          <div class="rating-bubble"></div>
+        </div>
+      `;
 
-    const done = Object.keys(ratings).length;
-    progress.textContent = `${done} / ${total} videos rated`;
-    submit.disabled = done !== total;
-  });
+      const slider = card.querySelector("input");
+      const bubble = card.querySelector(".rating-bubble");
 
-  grid.appendChild(card);
+      slider.addEventListener("input",()=>{
+        bubble.style.display="flex";
+        bubble.textContent = slider.value;
+        ratings[postId] = Number(slider.value);
+        card.classList.remove("unrated");
+        const done = Object.keys(ratings).length;
+        progress.textContent = `${done} / ${total} videos rated`;
+        submit.disabled = done !== total;
+      });
+
+    }catch(err){
+      card.innerHTML = `<p>Error loading video</p><a href="${url}" target="_blank">View on Reddit</a>`;
+    }
+  }
 }
 
-submit.onclick=async()=>{
-  submit.disabled=true;
-  msg.textContent="Submitting...";
+submit.onclick = async ()=>{
+  submit.disabled = true;
+  msg.textContent = "Submitting…";
+
   await addDoc(collection(db,"votes"),{
-    userId:"anon_"+crypto.randomUUID(),
+    userId: "anon_" + crypto.randomUUID(),
     ratings,
-    createdAt:serverTimestamp()
+    createdAt: serverTimestamp()
   });
-  msg.textContent="✅ Ratings submitted";
+
+  msg.textContent = "✅ Votes submitted successfully";
 };
+
+loadVideos();
 </script>
 
 </body>
