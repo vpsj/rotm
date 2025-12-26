@@ -12,7 +12,28 @@ body{
   color:#f1f1f1;
   font-family:system-ui,sans-serif;
 }
-header{text-align:center;padding:2.5rem 1rem}
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers everything horizontally */
+  text-align: center;
+}
+
+ul {
+  padding: 0;
+  list-style-position: inside; /* Ensures bullets stay next to centered text */
+}
+
+li {
+  white-space: nowrap; /* FORCES text to stay on one line */
+}
+
+/* Necessary to fit long sentences on small screens */
+@media (max-width: 600px) {
+  li {
+    font-size: 11px; /* Adjust smaller until it fits */
+  }
+}
 h1{margin-bottom:.8rem}
 .subtitle{max-width:720px;margin:auto;text-align:left}
 .subtitle ul{list-style-position:inside;color:#cfd3da}
@@ -167,3 +188,4 @@ loadVideos();
 
 </body>
 </html>
+
