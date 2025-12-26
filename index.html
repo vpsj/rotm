@@ -66,7 +66,7 @@ button:disabled{opacity:.4}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-/* YOUR REAL CONFIG – UNCHANGED */
+/* YOUR CONFIG – UNCHANGED */
 const firebaseConfig = {
   apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
   authDomain: "rotm-rating.firebaseapp.com",
@@ -89,6 +89,7 @@ let total=0;
 
 const linksRes = await fetch("https://raw.githubusercontent.com/vpsj/rotm/main/links.json");
 const links = await linksRes.json();
+
 total = links.length;
 progress.textContent = `0 / ${total} videos rated`;
 
@@ -114,9 +115,10 @@ for (const url of links) {
 
   slider.addEventListener("input",()=>{
     bubble.style.display="flex";
-    bubble.textContent = slider.value * 10;
-    ratings[id] = Number(slider.value) * 10;
+    bubble.textContent = slider.value;      
+    ratings[id] = Number(slider.value);     
     card.classList.remove("unrated");
+
     const done = Object.keys(ratings).length;
     progress.textContent = `${done} / ${total} videos rated`;
     submit.disabled = done !== total;
