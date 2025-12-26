@@ -127,7 +127,7 @@ const msg = document.getElementById("msg");
 const ratings = {};
 let total = 0;
 
-/* === LOAD VIDEOS FROM REDDIT (WORKING LOGIC) === */
+/* === LOAD VIDEOS FROM REDDIT (UNCHANGED SOURCE LOGIC) === */
 async function loadVideos(){
   const res = await fetch("https://raw.githubusercontent.com/vpsj/rotm/main/links.json");
   const urls = await res.json();
@@ -155,7 +155,15 @@ async function loadVideos(){
         <h3>${title}</h3>
         ${
           videoUrl
-            ? `<video src="${videoUrl}" controls preload="metadata" playsinline></video>`
+            ? `<video
+                src="${videoUrl}"
+                autoplay
+                muted
+                loop
+                controls
+                playsinline
+                preload="metadata"
+              ></video>`
             : "<p>Video unavailable</p>"
         }
         <a href="${url}" target="_blank">View on Reddit</a>
@@ -164,6 +172,21 @@ async function loadVideos(){
           <div class="rating-bubble"></div>
         </div>
       `;
+
+      const video = card.querySelector("video");
+
+      if(video){
+        video.volume = 0;
+
+        /* 🔑 THIS FIXES THE BROKEN VOLUME BUTTON */
+        const enableAudio = () => {
+          video.muted = false;
+          video.volume = 1;
+          video.removeEventListener("click", enableAudio);
+        };
+
+        video.addEventListener("click", enableAudio);
+      }
 
       const slider = card.querySelector("input");
       const bubble = card.querySelector(".rating-bubble");
