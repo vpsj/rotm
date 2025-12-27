@@ -76,7 +76,9 @@ h1{margin-bottom:.8rem}
   width:100%;
   background:#000;
   border-radius:8px;
-  }
+  overflow:hidden;
+}
+
 
 
 /* DEFAULT = landscape */
@@ -218,9 +220,10 @@ async function loadVideos(){
       <div class="video-wrap">
         <iframe
   	src="https://www.reddit.com/mediaembed/${postId}?autoplay=1&muted=1&controls=1"
-  	allow="autoplay; fullscreen">
-        scrolling="no">
-        </iframe>
+  	allow="autoplay; fullscreen"
+  	scrolling="no">
+	</iframe>
+
       </div>
       <a href="${url}" target="_blank">View on Reddit</a>
       <div class="slider-row">
@@ -239,7 +242,7 @@ async function loadVideos(){
       const v = j[0].data.children[0].data.secure_media?.reddit_video;
       if(v){
         const ratio = v.width / v.height;
-        iframe.style.height = ratio < 0.8 ? "40vh" : "20vh";
+        iframe.style.height = ratio < 0.8 ? "50vh" : "20vh";
 	
       }
     }catch{}
