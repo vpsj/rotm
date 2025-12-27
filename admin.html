@@ -65,7 +65,6 @@ tr.top1{background:var(--gold)}
 tr.top2{background:var(--silver)}
 tr.top3{background:var(--bronze)}
 a{color:#7fb0ff;text-decoration:none}
-a:hover{text-decoration:underline}
 .hidden{display:none}
 textarea{
   width:100%;
@@ -119,104 +118,132 @@ textarea{
 <thead>
 <tr>
 <th>User</th>
-<th>Video #</th>
+<th>Video</th>
 <th>Rating</th>
 <th>Time</th>
 </tr>
 </thead>
 <tbody id="statsBody"></tbody>
 </table>
-<br>
-<button onclick="exportCSV()">Export Votes to CSV</button>
 </div>
-
 </div>
 
 <script>
+/* ================= FIREBASE CONFIG (UNCHANGED) ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
   authDomain: "rotm-rating.firebaseapp.com",
   projectId: "rotm-rating",
   storageBucket: "rotm-rating.firebasestorage.app",
   messagingSenderId: "219038953244",
-  appId: "1:219038953244:web:fee4db5c59ed2909e294d9",
-  measurementId: "G-P3H0NR73MD"
+  appId: "1:219038953244:web:fee4db5c59ed2909e294d9"
 };
 firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth();
-const db=firebase.firestore();
 
-const LINKS_JSON="https://raw.githubusercontent.com/vpsj/rotm/main/links.json";
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const LINKS_JSON = "https://raw.githubusercontent.com/vpsj/rotm/main/links.json";
+
+const scoresTab = document.getElementById("scoresTab");
+const statsTab = document.getElementById("statsTab");
+const scoresBody = document.getElementById("scoresBody");
+const statsBody = document.getElementById("statsBody");
+const templateBox = document.getElementById("templateBox");
+
+let videos = {};
+let votes = [];
 
 auth.onAuthStateChanged(u=>{
   if(!u) return;
-  userEmail.textContent="Signed in as "+u.email;
+  userEmail.textContent = "Signed in as " + u.email;
   loadData();
 });
-
-let videos={},votes=[];
 
 scoresTabBtn.onclick=()=>{scoresTab.classList.remove("hidden");statsTab.classList.add("hidden")}
 statsTabBtn.onclick=()=>{statsTab.classList.remove("hidden");scoresTab.classList.add("hidden")}
 
-function extractMeta(url){
-  const parts=url.replace(/\/$/,'').split("/");
-  const id=parts[parts.indexOf("comments")+1];
-  const slug=parts[parts.indexOf("comments")+2]||"untitled";
-  const title=slug.replace(/[_-]/g," ").replace(/\b\w/g,c=>c.toUpperCase());
-  return {id,title,author:"unknown"};
+/* ============ REDDIT HELPERS ============ */
+function sentenceCase(str){
+  return str.replace(/\b\w/g,c=>c.toUpperCase());
 }
 
+function extractPostMeta(url){
+  const parts = url.replace(/\/$/,"").split("/");
+  const id = parts[parts.indexOf("comments")+1];
+  const slug = parts[parts.indexOf("comments")+2] || "untitled";
+  return {
+    id,
+    title: sentenceCase(slug.replace(/[_-]/g," ")),
+    redditUrl: url
+  };
+}
+
+async function fetchRedditData(url){
+  const res = await fetch(url + ".json");
+  const j = await res.json();
+  const post = j[0].data.children[0].data;
+  return {
+    upvotes: post.ups || 0,
+    author: post.author || "unknown"
+  };
+}
+
+/* ============ UPDATE VIDEOS BUTTON (FIXED) ============ */
 async function refreshVideos(){
   if(!confirm("This will replace ALL videos with latest links.json. Continue?")) return;
 
-  const res=await fetch(LINKS_JSON,{cache:"no-store"});
-  const urls=await res.json();
+  const res = await fetch(LINKS_JSON,{cache:"no-store"});
+  const urls = await res.json();
 
-  const batch=db.batch();
-  const old=await db.collection("videos").get();
+  const batch = db.batch();
+  const old = await db.collection("videos").get();
   old.forEach(d=>batch.delete(d.ref));
 
-  urls.forEach(u=>{
-    const m=extractMeta(u);
-    batch.set(db.collection("videos").doc(m.id),{
-      title:m.title,
-      redditUrl:u,
-      author:m.author,
-      upvotes:0
+  for(const url of urls){
+    const meta = extractPostMeta(url);
+    const reddit = await fetchRedditData(url);
+
+    batch.set(db.collection("videos").doc(meta.id),{
+      title: meta.title,
+      redditUrl: url,
+      upvotes: reddit.upvotes,
+      author: reddit.author
     });
-  });
+  }
 
   await batch.commit();
   alert("Videos updated from links.json");
 }
+refreshVideosBtn.onclick = refreshVideos;
 
-refreshVideosBtn.onclick=refreshVideos;
-
+/* ============ LOAD + CALCULATE ============ */
 function loadData(){
   db.collection("videos").onSnapshot(s=>{
-    videos={};
+    videos = {};
     s.forEach(d=>videos[d.id]={id:d.id,...d.data(),votePoints:0,upvotePoints:0,total:0});
     calculate();
   });
   db.collection("votes").onSnapshot(s=>{
-    votes=s.docs.map(d=>({id:d.id,...d.data()}));
+    votes = s.docs.map(d=>d.data());
     calculate();
     renderStats();
   });
 }
 
 function calculate(){
-  if(!Object.keys(videos).length) return;
   Object.values(videos).forEach(v=>v.votePoints=0);
+
   votes.forEach(v=>{
     Object.entries(v.ratings||{}).forEach(([id,r])=>{
-      if(videos[id]) videos[id].votePoints+=r*10;
+      if(videos[id]) videos[id].votePoints += r*10;
     });
   });
-  const sorted=[...Object.values(videos)].sort((a,b)=>a.upvotes-b.upvotes);
-  sorted.forEach((v,i)=>v.upvotePoints=(i+1)*10);
+
+  const sortedByUpvotes=[...Object.values(videos)].sort((a,b)=>a.upvotes-b.upvotes);
+  sortedByUpvotes.forEach((v,i)=>v.upvotePoints=(i+1)*10);
   Object.values(videos).forEach(v=>v.total=v.votePoints+v.upvotePoints);
+
   renderScores();
   renderTemplate();
 }
@@ -243,9 +270,11 @@ function renderScores(){
 function renderTemplate(){
   const sorted=[...Object.values(videos)].sort((a,b)=>b.total-a.total);
   if(!sorted.length) return;
+
   const winner=sorted[0];
   const others=sorted.slice(1,4);
-  templateBox.value=
+
+  templateBox.value =
 `Title: ✨ RailFan of the Month for [Month][Year] goes to u/${winner.author} for “${winner.title}” ✨
 
 Here are some of the other videos loved by both mods and the subreddit:
@@ -258,14 +287,13 @@ function renderStats(){
   votes.forEach(v=>{
     Object.entries(v.ratings||{}).forEach(([vid,r])=>{
       const tr=document.createElement("tr");
-      tr.innerHTML=`<td>${v.id.slice(0,8)}</td><td>${vid}</td><td>${r}</td><td>${new Date().toLocaleString()}</td>`;
+      tr.innerHTML=`<td>${v.userId||"anon"}</td><td>${vid}</td><td>${r}</td><td>${new Date().toLocaleString()}</td>`;
       statsBody.appendChild(tr);
     });
   });
 }
 
 copyTemplate=()=>navigator.clipboard.writeText(templateBox.value);
-exportCSV=()=>{};
 resetBtn.onclick=()=>db.collection("votes").get().then(s=>s.forEach(d=>d.ref.delete()));
 logoutBtn.onclick=()=>auth.signOut();
 </script>
