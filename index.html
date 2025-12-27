@@ -42,7 +42,7 @@ h1{margin-bottom:.8rem}
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-  gap:1.6rem;
+  gap:2rem; /* 👈 space to scroll comfortably on mobile */
 }
 
 .card{
@@ -66,7 +66,7 @@ h1{margin-bottom:.8rem}
   color:#6cb6ff;
   text-decoration:none;
   font-size:.9rem;
-  margin-top:.6rem
+  margin:.6rem 0
 }
 
 /* VIDEO */
@@ -75,20 +75,34 @@ h1{margin-bottom:.8rem}
   background:#000;
   border-radius:10px;
   overflow:hidden;
+  display:flex;
+  justify-content:center;
 }
 
 .video-wrap iframe{
   width:100%;
-  height:400px;          /* temporary until resized */
+  max-width:100%;
   border:none;
   display:block;
 }
 
-/* no scrollbars anywhere */
+/* absolutely NO scrollbars */
 iframe::-webkit-scrollbar{display:none}
 iframe{scrollbar-width:none}
 
-input[type=range]{flex:1}
+/* RATING */
+.slider-row{
+  display:flex;
+  align-items:center;
+  gap:.8rem;
+  margin-top:.8rem;
+  z-index:10;           /* 👈 ensures slider stays clickable */
+}
+
+input[type=range]{
+  flex:1;
+  pointer-events:auto; /* 👈 critical fix */
+}
 
 .rating-bubble{
   width:42px;
@@ -154,16 +168,15 @@ button:disabled{opacity:.5}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-const firebaseConfig = {
+initializeApp({
   apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
   authDomain: "rotm-rating.firebaseapp.com",
   projectId: "rotm-rating",
   storageBucket: "rotm-rating.firebaseapp.com",
   messagingSenderId: "219038953244",
   appId: "1:219038953244:web:fee4db5c59ed2909e294d9"
-};
+});
 
-initializeApp(firebaseConfig);
 const db = getFirestore();
 
 const grid = document.getElementById("grid");
@@ -185,37 +198,39 @@ async function loadVideos(){
   progress.textContent = `0 / ${total} videos rated`;
 
   for(const url of urls){
-    if(!url.endsWith("/")) continue;
-
-    const parts = url.split("/");
+    const parts = url.replace(/\/$/,"").split("/");
     const postId = parts[parts.indexOf("comments")+1];
     const slug = parts[parts.indexOf("comments")+2] || "";
 
     const title = slug
-      ? slug.replace(/[_-]/g," ").replace(/\b\w/g,c=>c.toUpperCase())
-      : "Untitled Video";
+      .replace(/[_-]/g," ")
+      .replace(/\b\w/g,c=>c.toUpperCase());
 
     const card = document.createElement("div");
     card.className = "card unrated";
 
-    const embedUrl =
-      `https://www.reddit.com/mediaembed/${postId}?autoplay=1&muted=1`;
-
     card.innerHTML = `
       <h3>${title}</h3>
       <div class="video-wrap">
-        <iframe src="${embedUrl}" allow="autoplay; fullscreen"></iframe>
+        <iframe src="https://www.reddit.com/mediaembed/${postId}?autoplay=1&muted=1"
+                allow="autoplay; fullscreen"></iframe>
       </div>
       <a href="${url}" target="_blank">View on Reddit</a>
-      <input type="range" min="1" max="10">
+      <div class="slider-row">
+        <input type="range" min="1" max="10">
+        <div class="rating-bubble"></div>
+      </div>
     `;
 
     grid.appendChild(card);
 
     const slider = card.querySelector("input");
+    const bubble = card.querySelector(".rating-bubble");
 
     slider.addEventListener("input",()=>{
       ratings[postId] = Number(slider.value);
+      bubble.style.display="flex";
+      bubble.textContent = slider.value;
       card.classList.remove("unrated");
 
       const done = Object.keys(ratings).length;
@@ -225,8 +240,7 @@ async function loadVideos(){
   }
 }
 
-/* 🔥 THIS IS THE ACTUAL FIX 🔥 */
-/* Reddit sends iframe height via postMessage */
+/* Reddit sends correct iframe height via postMessage */
 window.addEventListener("message", e=>{
   if(!e.data || !e.data.height) return;
   document.querySelectorAll("iframe").forEach(f=>{
