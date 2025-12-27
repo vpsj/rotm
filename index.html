@@ -240,11 +240,17 @@ async function loadVideos(){
       const r = await fetch(url + ".json");
       const j = await r.json();
       const v = j[0].data.children[0].data.secure_media?.reddit_video;
-      if(v){
-        const ratio = v.width / v.height;
-        iframe.style.height = ratio < 0.8 ? "50vh" : "20vh";
-	
-      }
+      if (v) {
+  const ratio = v.width / v.height;
+
+  if (ratio >= 0.8) {
+    iframe.src += "&autoplay=1";
+    iframe.style.height = "20vh";
+  } else {
+    iframe.style.height = "42vh";
+  }
+}
+
     }catch{}
 
     const slider = card.querySelector("input");
