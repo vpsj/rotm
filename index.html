@@ -76,7 +76,8 @@ h1{margin-bottom:.8rem}
   width:100%;
   background:#000;
   border-radius:8px;
-}
+  }
+
 
 /* DEFAULT = landscape */
 .video-wrap iframe{
@@ -216,9 +217,9 @@ async function loadVideos(){
       <h3>${title}</h3>
       <div class="video-wrap">
         <iframe
-          src="https://www.reddit.com/mediaembed/${postId}?autoplay=1&muted=1"
-          allow="autoplay; fullscreen"
-          scrolling="no">
+  	src="https://www.reddit.com/mediaembed/${postId}?autoplay=1&muted=1&controls=1"
+  	allow="autoplay; fullscreen">
+        scrolling="no">
         </iframe>
       </div>
       <a href="${url}" target="_blank">View on Reddit</a>
@@ -239,6 +240,7 @@ async function loadVideos(){
       if(v){
         const ratio = v.width / v.height;
         iframe.style.height = ratio < 0.8 ? "40vh" : "20vh";
+	
       }
     }catch{}
 
