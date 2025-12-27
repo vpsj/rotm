@@ -40,15 +40,15 @@ h1{margin-bottom:.8rem}
 }
 
 /* ===== MASONRY GRID FIX ===== */
-.grid {
-  display: block; 
-  columns: 3 320px; 
-  column-gap: 2rem;
+.grid{
+  display:block;
+  columns:3 320px;
+  column-gap:2rem;
 }
 
 .card{
-  break-inside: avoid;
-  margin-bottom: 2rem;
+  break-inside:avoid;
+  margin-bottom:2rem;
   background:#1a1f27;
   border-radius:14px;
   padding:1rem;
@@ -78,22 +78,23 @@ h1{margin-bottom:.8rem}
   border-radius:8px;
 }
 
+/* DEFAULT = landscape */
 .video-wrap iframe{
   width:100%;
-  height:40vh;        /* smaller than before */
-  min-height:280px;  /* safe for landscape */
-  max-height:520px;  /* prevents absurd tall cards */
+  height:20vh;
+  min-height:220px;
+  max-height:520px;
   border:0;
   display:block;
 }
 
 /* Global scrollbar nuking */
-iframe {
-  scrollbar-width: none !important;
+iframe{
+  scrollbar-width:none !important;
 }
-iframe::-webkit-scrollbar {
-  display: none !important;
-  width: 0 !important;
+iframe::-webkit-scrollbar{
+  display:none !important;
+  width:0 !important;
 }
 
 /* RATING */
@@ -123,7 +124,7 @@ input[type=range]{flex:1}
 .footer{
   text-align:center;
   margin:2.5rem 0;
-  clear: both;
+  clear:both;
 }
 
 button{
@@ -215,11 +216,10 @@ async function loadVideos(){
       <h3>${title}</h3>
       <div class="video-wrap">
         <iframe
-  src="https://www.reddit.com/mediaembed/${postId}?autoplay=1&muted=1"
-  allow="autoplay; fullscreen"
-  scrolling="no">
-</iframe>
-
+          src="https://www.reddit.com/mediaembed/${postId}?autoplay=1&muted=1"
+          allow="autoplay; fullscreen"
+          scrolling="no">
+        </iframe>
       </div>
       <a href="${url}" target="_blank">View on Reddit</a>
       <div class="slider-row">
@@ -229,37 +229,18 @@ async function loadVideos(){
     `;
 
     grid.appendChild(card);
+
+    /* === ONLY FIX: JSON-based height classification === */
     const iframe = card.querySelector("iframe");
-
-/* Dynamic aspect-ratio resolver */
-iframe.addEventListener("load", () => {
-  try {
-    const w = iframe.offsetWidth;
-
-    /* Default fallback */
-    let ratio = 16 / 9;
-
-    /* Heuristic based on embed height */
-    setTimeout(() => {
-      const h = iframe.contentWindow?.document?.body?.scrollHeight;
-
-      if (h) {
-        ratio = w / h;
+    try{
+      const r = await fetch(url + ".json");
+      const j = await r.json();
+      const v = j[0].data.children[0].data.secure_media?.reddit_video;
+      if(v){
+        const ratio = v.width / v.height;
+        iframe.style.height = ratio < 0.8 ? "40vh" : "20vh";
       }
-
-      /* Portrait vs landscape correction */
-      if (ratio < 1) {
-        card.querySelector(".video-wrap").style.aspectRatio = "9 / 16";
-      } else {
-        card.querySelector(".video-wrap").style.aspectRatio = "16 / 9";
-      }
-    }, 300);
-  } catch {
-    /* Silent fail – fallback ratio remains */
-    card.querySelector(".video-wrap").style.aspectRatio = "16 / 9";
-  }
-});
-
+    }catch{}
 
     const slider = card.querySelector("input");
     const bubble = card.querySelector(".rating-bubble");
@@ -277,33 +258,6 @@ iframe.addEventListener("load", () => {
   }
 }
 
-window.addEventListener("message", e => {
-  let h = null;
-
-  // Reddit sends different shapes depending on embed version
-  if (typeof e.data === "object") {
-    if (typeof e.data.height === "number") {
-      h = e.data.height;
-    } else if (e.data.data && typeof e.data.data.height === "number") {
-      h = e.data.data.height;
-    }
-  }
-
-  if (!h) return;
-
-  document.querySelectorAll("iframe").forEach(f => {
-    if (f.contentWindow === e.source) {
-      // Portrait embeds are much taller internally
-      if (h > 650) {
-        f.style.height = "40vh";   // portrait
-      } else {
-        f.style.height = "20vh";   // landscape
-      }
-    }
-  });
-});
-
-
 submit.onclick = async ()=>{
   submit.disabled = true;
   msg.textContent = "Submitting…";
@@ -320,5 +274,3 @@ loadVideos();
 
 </body>
 </html>
-
-
