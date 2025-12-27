@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 :root{
@@ -113,19 +114,29 @@ textarea{
 <button onclick="copyTemplate()">Copy Template</button>
 </div>
 
+<!-- ===================== STATS TAB (ONLY MODIFIED SECTION) ===================== -->
 <div id="statsTab" class="card hidden">
+
+<h3>User Voting Log</h3>
 <table>
 <thead>
 <tr>
 <th>User</th>
-<th>Video</th>
-<th>Rating</th>
-<th>Time</th>
+<th>Voted At</th>
 </tr>
 </thead>
-<tbody id="statsBody"></tbody>
+<tbody id="userLogBody"></tbody>
 </table>
+
+<h3 style="margin-top:32px">Rating Distribution</h3>
+<canvas id="ratingDistChart" height="120"></canvas>
+
+<h3 style="margin-top:32px">Average Rating per Video</h3>
+<canvas id="avgRatingChart" height="160"></canvas>
+
 </div>
+<!-- =========================================================================== -->
+
 </div>
 
 <script>
@@ -148,8 +159,8 @@ const LINKS_JSON = "https://raw.githubusercontent.com/vpsj/rotm/main/links.json"
 const scoresTab = document.getElementById("scoresTab");
 const statsTab = document.getElementById("statsTab");
 const scoresBody = document.getElementById("scoresBody");
-const statsBody = document.getElementById("statsBody");
 const templateBox = document.getElementById("templateBox");
+const userLogBody = document.getElementById("userLogBody");
 
 let videos = {};
 let votes = [];
@@ -189,7 +200,7 @@ async function fetchRedditData(url){
   };
 }
 
-/* ============ UPDATE VIDEOS BUTTON (FIXED) ============ */
+/* ============ UPDATE VIDEOS BUTTON (UNCHANGED) ============ */
 async function refreshVideos(){
   if(!confirm("This will replace ALL videos with latest links.json. Continue?")) return;
 
@@ -217,7 +228,7 @@ async function refreshVideos(){
 }
 refreshVideosBtn.onclick = refreshVideos;
 
-/* ============ LOAD + CALCULATE ============ */
+/* ============ LOAD + CALCULATE (UNCHANGED) ============ */
 function loadData(){
   db.collection("videos").onSnapshot(s=>{
     videos = {};
@@ -282,16 +293,61 @@ Here are some of the other videos loved by both mods and the subreddit:
 ${others.map(v=>`* [${v.title}](${v.redditUrl}) by u/${v.author}`).join("\n")}`;
 }
 
+/* ===================== NEW STATS LOGIC ONLY ===================== */
+let ratingDistChart, avgRatingChart;
+
 function renderStats(){
-  statsBody.innerHTML="";
+  userLogBody.innerHTML="";
+
+  votes.forEach(v=>{
+    const tr=document.createElement("tr");
+    const ts = v.timestamp?.seconds
+      ? new Date(v.timestamp.seconds * 1000).toLocaleString()
+      : "";
+    tr.innerHTML=`<td>${v.userId||"anon"}</td><td>${ts}</td>`;
+    userLogBody.appendChild(tr);
+  });
+
+  const ratingBuckets = {};
+  const perVideo = {};
+
   votes.forEach(v=>{
     Object.entries(v.ratings||{}).forEach(([vid,r])=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML=`<td>${v.userId||"anon"}</td><td>${vid}</td><td>${r}</td><td>${new Date().toLocaleString()}</td>`;
-      statsBody.appendChild(tr);
+      ratingBuckets[r]=(ratingBuckets[r]||0)+1;
+      if(!perVideo[vid]) perVideo[vid]={sum:0,count:0};
+      perVideo[vid].sum+=r;
+      perVideo[vid].count++;
     });
   });
+
+  const distLabels = Object.keys(ratingBuckets).sort((a,b)=>a-b);
+  const distValues = distLabels.map(r=>ratingBuckets[r]);
+
+  if(ratingDistChart) ratingDistChart.destroy();
+  ratingDistChart = new Chart(
+    document.getElementById("ratingDistChart"),
+    {
+      type:"bar",
+      data:{labels:distLabels,datasets:[{label:"Votes",data:distValues}]},
+      options:{plugins:{legend:{display:false}}}
+    }
+  );
+
+  const videoIds = Object.keys(perVideo);
+  const videoLabels = videoIds.map(id=>videos[id]?.title||id);
+  const avgValues = videoIds.map(id=>(perVideo[id].sum/perVideo[id].count).toFixed(2));
+
+  if(avgRatingChart) avgRatingChart.destroy();
+  avgRatingChart = new Chart(
+    document.getElementById("avgRatingChart"),
+    {
+      type:"bar",
+      data:{labels:videoLabels,datasets:[{label:"Average Rating",data:avgValues}]},
+      options:{indexAxis:"y"}
+    }
+  );
 }
+/* ================================================================= */
 
 copyTemplate=()=>navigator.clipboard.writeText(templateBox.value);
 resetBtn.onclick=()=>db.collection("votes").get().then(s=>s.forEach(d=>d.ref.delete()));
