@@ -72,33 +72,30 @@ h1{margin-bottom:.8rem}
 /* ✅ FIX: dynamic video sizing */
 .video-wrap{
   width:100%;
-  position:relative;
   border-radius:10px;
   overflow:hidden;
   background:#000;
 }
 
+/* CRITICAL FIX */
 .video-wrap iframe{
   width:100%;
-  height:auto;
-  aspect-ratio:16/9;
+  height:80vh;               /* allows portrait videos to breathe */
+  max-height:90vh;
+  min-height:360px;          /* landscape still looks fine */
   border:none;
   display:block;
+  overflow:hidden;
 }
 
-/* Portrait videos adapt automatically */
-@supports not (aspect-ratio: 16 / 9){
-  .video-wrap iframe{
-    height:360px;
-  }
+/* Kill scrollbar everywhere */
+.video-wrap iframe::-webkit-scrollbar{
+  display:none;
+}
+.video-wrap iframe{
+  scrollbar-width:none;
 }
 
-.slider-row{
-  display:flex;
-  gap:.8rem;
-  align-items:center;
-  margin-top:.8rem
-}
 
 input[type=range]{flex:1}
 
@@ -227,6 +224,7 @@ async function loadVideos(){
           src="${embedUrl}"
           allow="autoplay; fullscreen"
           loading="lazy"
+          scrolling="no"
         ></iframe>
       </div>
       <a href="${url}" target="_blank">View on Reddit</a>
@@ -270,3 +268,4 @@ loadVideos();
 
 </body>
 </html>
+
