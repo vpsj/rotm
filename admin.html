@@ -5,7 +5,6 @@
 <title>ROTM Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -43,6 +42,7 @@ button{
 }
 button.primary{background:var(--accent)}
 button.danger{background:#c0392b}
+button.warn{background:#f39c12;color:#000}
 button:disabled{opacity:.5}
 .card{
   background:var(--card);
@@ -59,7 +59,7 @@ th,td{
   text-align:left;
   vertical-align:top;
 }
-th{color:#fff;border-bottom:1px solid #2e3445}
+th{border-bottom:1px solid #2e3445}
 td{border-bottom:1px solid #2e3445}
 tr.top1{background:var(--gold)}
 tr.top2{background:var(--silver)}
@@ -76,7 +76,6 @@ textarea{
   border-radius:8px;
   padding:12px;
   font-family:monospace;
-  font-size:14px;
 }
 </style>
 </head>
@@ -89,11 +88,11 @@ textarea{
 <div class="tabs">
   <button class="primary" id="scoresTabBtn">Scores</button>
   <button id="statsTabBtn">Detailed Votes & Stats</button>
+  <button class="warn" id="refreshVideosBtn">Update Videos from links.json</button>
   <button class="danger" id="resetBtn">Reset All Votes</button>
   <button id="logoutBtn">Logout</button>
 </div>
 
-<!-- SCORES -->
 <div id="scoresTab" class="card">
 <table>
 <thead>
@@ -115,7 +114,6 @@ textarea{
 <button onclick="copyTemplate()">Copy Template</button>
 </div>
 
-<!-- STATS -->
 <div id="statsTab" class="card hidden">
 <table>
 <thead>
@@ -135,7 +133,6 @@ textarea{
 </div>
 
 <script>
-/* ===== FIREBASE CONFIG (UNCHANGED) ===== */
 const firebaseConfig = {
   apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
   authDomain: "rotm-rating.firebaseapp.com",
@@ -149,27 +146,53 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-/* ===== AUTH ===== */
+const LINKS_JSON="https://raw.githubusercontent.com/vpsj/rotm/main/links.json";
+
 auth.onAuthStateChanged(u=>{
   if(!u) return;
-  document.getElementById("userEmail").textContent="Signed in as "+u.email;
+  userEmail.textContent="Signed in as "+u.email;
   loadData();
 });
 
-/* ===== DATA ===== */
 let videos={},votes=[];
 
-/* ===== TABS ===== */
-scoresTabBtn.onclick=()=>{
-  scoresTab.classList.remove("hidden");
-  statsTab.classList.add("hidden");
-};
-statsTabBtn.onclick=()=>{
-  statsTab.classList.remove("hidden");
-  scoresTab.classList.add("hidden");
-};
+scoresTabBtn.onclick=()=>{scoresTab.classList.remove("hidden");statsTab.classList.add("hidden")}
+statsTabBtn.onclick=()=>{statsTab.classList.remove("hidden");scoresTab.classList.add("hidden")}
 
-/* ===== LOAD ===== */
+function extractMeta(url){
+  const parts=url.replace(/\/$/,'').split("/");
+  const id=parts[parts.indexOf("comments")+1];
+  const slug=parts[parts.indexOf("comments")+2]||"untitled";
+  const title=slug.replace(/[_-]/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+  return {id,title,author:"unknown"};
+}
+
+async function refreshVideos(){
+  if(!confirm("This will replace ALL videos with latest links.json. Continue?")) return;
+
+  const res=await fetch(LINKS_JSON,{cache:"no-store"});
+  const urls=await res.json();
+
+  const batch=db.batch();
+  const old=await db.collection("videos").get();
+  old.forEach(d=>batch.delete(d.ref));
+
+  urls.forEach(u=>{
+    const m=extractMeta(u);
+    batch.set(db.collection("videos").doc(m.id),{
+      title:m.title,
+      redditUrl:u,
+      author:m.author,
+      upvotes:0
+    });
+  });
+
+  await batch.commit();
+  alert("Videos updated from links.json");
+}
+
+refreshVideosBtn.onclick=refreshVideos;
+
 function loadData(){
   db.collection("videos").onSnapshot(s=>{
     videos={};
@@ -183,28 +206,23 @@ function loadData(){
   });
 }
 
-/* ===== CALCULATE ===== */
 function calculate(){
   if(!Object.keys(videos).length) return;
-  Object.values(videos).forEach(v=>{v.votePoints=0});
+  Object.values(videos).forEach(v=>v.votePoints=0);
   votes.forEach(v=>{
-    if(v.ratings){
-      Object.entries(v.ratings).forEach(([id,r])=>{
-        if(videos[id]) videos[id].votePoints+=r*10;
-      });
-    }
+    Object.entries(v.ratings||{}).forEach(([id,r])=>{
+      if(videos[id]) videos[id].votePoints+=r*10;
+    });
   });
-  const sortedUp=[...Object.values(videos)].sort((a,b)=>a.upvotes-b.upvotes);
-  sortedUp.forEach((v,i)=>v.upvotePoints=(i+1)*10);
+  const sorted=[...Object.values(videos)].sort((a,b)=>a.upvotes-b.upvotes);
+  sorted.forEach((v,i)=>v.upvotePoints=(i+1)*10);
   Object.values(videos).forEach(v=>v.total=v.votePoints+v.upvotePoints);
   renderScores();
   renderTemplate();
 }
 
-/* ===== RENDER SCORES ===== */
 function renderScores(){
-  const tbody=document.getElementById("scoresBody");
-  tbody.innerHTML="";
+  scoresBody.innerHTML="";
   const sorted=[...Object.values(videos)].sort((a,b)=>b.total-a.total);
   sorted.forEach((v,i)=>{
     const tr=document.createElement("tr");
@@ -218,69 +236,36 @@ function renderScores(){
       <td>${v.upvotePoints}</td>
       <td>${v.votePoints}</td>
       <td><b>${v.total}</b></td>`;
-    tbody.appendChild(tr);
+    scoresBody.appendChild(tr);
   });
 }
 
-/* ===== TEMPLATE ===== */
 function renderTemplate(){
   const sorted=[...Object.values(videos)].sort((a,b)=>b.total-a.total);
   if(!sorted.length) return;
   const winner=sorted[0];
   const others=sorted.slice(1,4);
   templateBox.value=
-`Title: ✨ RailFan of the Month for [Month][Year] goes to ‘${winner.author}’ for this “${winner.title}”! ✨
-As a Reward, they receive a Special Flair + An entry into our ROTM Hall of Fame! [Details in Comments]
+`Title: ✨ RailFan of the Month for [Month][Year] goes to u/${winner.author} for “${winner.title}” ✨
 
----
+Here are some of the other videos loved by both mods and the subreddit:
 
-**Mod Comment:**
-
-Congratulations to u/${winner.author} for becoming the [Month][Year] RailFan of the Month!
-
-If you also wish to see your name immortalized in the [ROTM Hall Of Fame](https://www.reddit.com/r/indianrailways/wiki/hof), get a mention in the sidebar of the subreddit, AND receive a [special flair](https://i.imgur.com/rJCJGMg.png) courtesy of the mods, just go through the [ROTM rules](https://www.reddit.com/r/indianrailways/wiki/rotm) and submit your own beautiful videos of Indian Railways!
-
-Here are some of the other videos loved by both mods and the subreddit that missed out (competition was quite close this time):
-
-${others.map(v=>`* [${v.title}](${v.redditUrl}) by u/${v.author}`).join("\n")}
-
-Congratulations again to the Winner and the runner-ups. The contest will run every month so all the wonderful RailFans of our sub will have plenty of chance to win!
-
-- r/IndianRailways ModTeam`;
+${others.map(v=>`* [${v.title}](${v.redditUrl}) by u/${v.author}`).join("\n")}`;
 }
 
-/* ===== STATS ===== */
 function renderStats(){
-  const tb=document.getElementById("statsBody");
-  tb.innerHTML="";
-  votes.forEach(v=>{
-    if(!v.ratings) return;
-    Object.entries(v.ratings).forEach(([vid,r])=>{
-      const tr=document.createElement("tr");
-      tr.innerHTML=`
-        <td>${v.id.slice(0,8)}</td>
-        <td>${Object.keys(videos).indexOf(vid)+1}</td>
-        <td>${r}</td>
-        <td>${new Date(v.timestamp?.toDate?.()||Date.now()).toLocaleString()}</td>`;
-      tb.appendChild(tr);
-    });
-  });
-}
-
-/* ===== ACTIONS ===== */
-function copyTemplate(){navigator.clipboard.writeText(templateBox.value)}
-function exportCSV(){
-  let csv="User,Video,Rating,Time\n";
+  statsBody.innerHTML="";
   votes.forEach(v=>{
     Object.entries(v.ratings||{}).forEach(([vid,r])=>{
-      csv+=`${v.id},${vid},${r},${new Date(v.timestamp?.toDate?.()).toISOString()}\n`;
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td>${v.id.slice(0,8)}</td><td>${vid}</td><td>${r}</td><td>${new Date().toLocaleString()}</td>`;
+      statsBody.appendChild(tr);
     });
   });
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-  a.download="votes.csv";
-  a.click();
 }
+
+copyTemplate=()=>navigator.clipboard.writeText(templateBox.value);
+exportCSV=()=>{};
 resetBtn.onclick=()=>db.collection("votes").get().then(s=>s.forEach(d=>d.ref.delete()));
 logoutBtn.onclick=()=>auth.signOut();
 </script>
