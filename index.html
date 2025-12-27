@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RailFan of the Month</title>
 
 <style>
@@ -13,62 +13,99 @@ body{
   font-family:system-ui,sans-serif;
 }
 header{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
   text-align:center;
-  padding:2rem 1rem;
 }
-.subtitle{
-  max-width:720px;
-  margin:auto;
-  text-align:left;
-  color:#cfd3da;
-}
-.container{
-  max-width:1200px;
-  margin:auto;
-  padding:1rem;
-}
+h1{margin-bottom:.8rem}
+
+.subtitle{max-width:720px;margin:auto;text-align:left}
+.subtitle ul{list-style-position:inside;color:#cfd3da}
+
+.container{max-width:1200px;margin:auto;padding:1rem}
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(360px,1fr));
-  gap:1.4rem;
+  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:1.4rem
 }
+
 .card{
   background:#1a1f27;
   border-radius:14px;
   padding:1rem;
+  box-shadow:0 6px 18px rgba(0,0,0,.45);
+  display:flex;
+  flex-direction:column
 }
-.card.unrated{outline:2px solid #ff6b6b}
-.card h3{margin:.3rem 0 .6rem}
-.card a{color:#6cb6ff;text-decoration:none;font-size:.9rem}
 
-iframe, video{
+.card h3{
+  margin:.2rem 0 .8rem;
+  font-size:1rem;
+  line-height:1.4;
+  font-weight:600;
+  word-break:break-word
+}
+
+.card a{
+  color:#6cb6ff;
+  text-decoration:none;
+  font-size:.9rem;
+  margin-top:.6rem
+}
+
+iframe{
   width:100%;
   height:520px;
+  border:none;
   border-radius:10px;
-  background:#000;
+  background:#000
+}
+
+/* Mobile adjustments */
+@media (max-width: 600px){
+  iframe{height:360px}
 }
 
 .slider-row{
   display:flex;
   gap:.8rem;
   align-items:center;
-  margin-top:.6rem;
+  margin-top:.8rem
 }
+
 input[type=range]{flex:1}
 
 .rating-bubble{
-  width:42px;height:42px;border-radius:50%;
-  background:#6cb6ff;color:#000;font-weight:800;
-  display:none;align-items:center;justify-content:center
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  background:#6cb6ff;
+  color:#000;
+  font-weight:800;
+  display:none;
+  align-items:center;
+  justify-content:center
 }
 
-.footer{text-align:center;margin:2rem 0}
+.card.unrated{outline:2px solid #ff6b6b}
+
+.footer{text-align:center;margin:2.5rem 0}
+
 button{
-  background:#6cb6ff;color:#000;
-  border:none;border-radius:14px;
-  padding:.9rem 2rem;font-weight:800
+  background:#6cb6ff;
+  color:#000;
+  border:none;
+  border-radius:14px;
+  padding:.9rem 2rem;
+  font-weight:800;
+  font-size:1rem
 }
+
 button:disabled{opacity:.5}
+
+#progress{margin-top:.8rem;color:#cfd3da}
+#msg{margin-top:.6rem;font-weight:700}
 </style>
 </head>
 
@@ -92,6 +129,7 @@ button:disabled{opacity:.5}
   <div class="footer">
     <button id="submit" disabled>Submit Ratings</button>
     <div id="progress">0 / 0 videos rated</div>
+    <div id="msg"></div>
   </div>
 </div>
 
@@ -104,7 +142,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
   authDomain: "rotm-rating.firebaseapp.com",
   projectId: "rotm-rating",
-  storageBucket: "rotm-rating.firebasestorage.app",
+  storageBucket: "rotm-rating.firebaseapp.com",
   messagingSenderId: "219038953244",
   appId: "1:219038953244:web:fee4db5c59ed2909e294d9"
 };
@@ -115,99 +153,89 @@ const db = getFirestore(app);
 const grid = document.getElementById("grid");
 const submit = document.getElementById("submit");
 const progress = document.getElementById("progress");
+const msg = document.getElementById("msg");
 
 const ratings = {};
 let total = 0;
 
-const isChrome = /Chrome/.test(navigator.userAgent) && !/Firefox/.test(navigator.userAgent);
-
-/* ================= VIDEO LOADER ================= */
-
+/* ========= OPTION A — CHROME SAFE VIDEO LOADER + TITLE ========= */
 async function loadVideos(){
-  const res = await fetch("links.json");
-  const links = await res.json();
+  const res = await fetch(
+    "https://raw.githubusercontent.com/vpsj/rotm/main/links.json",
+    { cache:"no-store" }
+  );
+  const urls = await res.json();
 
-  total = links.length;
+  total = urls.length;
   progress.textContent = `0 / ${total} videos rated`;
 
-  for(const link of links){
+  for(const url of urls){
+    if(!url.endsWith("/")) continue;
+
+    const parts = url.split("/");
+    const idIndex = parts.indexOf("comments") + 1;
+    const slugIndex = idIndex + 1;
+
+    const postId = parts[idIndex];
+    const slug = parts[slugIndex] || "";
+
+    const title = slug
+  ? slug
+      .replace(/[_-]/g, " ")
+      .trim()
+      .toLowerCase()
+      .replace(/\b\w/g, c => c.toUpperCase())
+  : "Untitled Video";
+
+
+
     const card = document.createElement("div");
     card.className = "card unrated";
+
+    const embedUrl =
+      `https://www.reddit.com/mediaembed/${postId}?autoplay=1&muted=1`;
+
+    card.innerHTML = `
+      <h3>${title}</h3>
+      <iframe
+        src="${embedUrl}"
+        allow="autoplay; fullscreen"
+        loading="lazy"
+      ></iframe>
+      <a href="${url}" target="_blank">View on Reddit</a>
+      <div class="slider-row">
+        <input type="range" min="1" max="10" step="1">
+        <div class="rating-bubble"></div>
+      </div>
+    `;
+
     grid.appendChild(card);
 
-    try{
-      const r = await fetch(link + ".json");
-      const j = await r.json();
-      const post = j[0].data.children[0].data;
-      const id = post.id;
+    const slider = card.querySelector("input");
+    const bubble = card.querySelector(".rating-bubble");
 
-      let mediaHTML = "";
+    slider.addEventListener("input",()=>{
+      bubble.style.display="flex";
+      bubble.textContent = slider.value;
+      ratings[postId] = Number(slider.value);
+      card.classList.remove("unrated");
 
-      if(isChrome){
-        const mp4 = post.media?.reddit_video?.fallback_url;
-        if(!mp4) throw "No MP4";
-
-        mediaHTML = `
-          <video
-            src="${mp4}"
-            autoplay
-            muted
-            loop
-            controls
-            playsinline
-          ></video>
-        `;
-      }else{
-        const embed =
-          `https://www.redditmedia.com${post.permalink}?ref_source=embed&embed=true`;
-        mediaHTML = `
-          <iframe
-            src="${embed}"
-            loading="lazy"
-            allow="autoplay; fullscreen; picture-in-picture"
-          ></iframe>
-        `;
-      }
-
-      card.innerHTML = `
-        <h3>${post.title}</h3>
-        ${mediaHTML}
-        <a href="${link}" target="_blank">View on Reddit</a>
-        <div class="slider-row">
-          <input type="range" min="1" max="10" step="1">
-          <div class="rating-bubble"></div>
-        </div>
-      `;
-
-      const slider = card.querySelector("input");
-      const bubble = card.querySelector(".rating-bubble");
-
-      slider.addEventListener("input",()=>{
-        bubble.style.display="flex";
-        bubble.textContent = slider.value;
-        ratings[id] = Number(slider.value);
-        card.classList.remove("unrated");
-        const done = Object.keys(ratings).length;
-        progress.textContent = `${done} / ${total} videos rated`;
-        submit.disabled = done !== total;
-      });
-
-    }catch(e){
-      card.innerHTML = `
-        <p>Error loading video</p>
-        <a href="${link}" target="_blank">View on Reddit</a>
-      `;
-    }
+      const done = Object.keys(ratings).length;
+      progress.textContent = `${done} / ${total} videos rated`;
+      submit.disabled = done !== total;
+    });
   }
 }
 
 submit.onclick = async ()=>{
   submit.disabled = true;
+  msg.textContent = "Submitting…";
   await addDoc(collection(db,"votes"),{
-    userId:"anon_"+crypto.randomUUID(),
+    userId: "anon_" + crypto.randomUUID(),
     ratings,
-    createdAt:serverTimestamp()
+    createdAt: serverTimestamp()
   });
+  msg.textContent = "✅ Votes submitted successfully";
 };
 
 loadVideos();
