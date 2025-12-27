@@ -12,22 +12,37 @@ body{
   color:#f1f1f1;
   font-family:system-ui,sans-serif;
 }
+
 header{
   display:flex;
   flex-direction:column;
   align-items:center;
   text-align:center;
 }
+
 h1{margin-bottom:.8rem}
 
-.subtitle{max-width:720px;margin:auto;text-align:left}
-.subtitle ul{list-style-position:inside;color:#cfd3da}
+.subtitle{
+  max-width:720px;
+  margin:auto;
+  text-align:left
+}
 
-.container{max-width:1200px;margin:auto;padding:1rem}
+.subtitle ul{
+  list-style-position:inside;
+  color:#cfd3da
+}
+
+.container{
+  max-width:1200px;
+  margin:auto;
+  padding:1rem
+}
+
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-  gap:1.4rem
+  gap:1.6rem; /* slightly more spacing for mobile scroll */
 }
 
 .card{
@@ -54,17 +69,28 @@ h1{margin-bottom:.8rem}
   margin-top:.6rem
 }
 
-iframe{
+/* ✅ FIX: dynamic video sizing */
+.video-wrap{
   width:100%;
-  height:520px;
-  border:none;
+  position:relative;
   border-radius:10px;
-  background:#000
+  overflow:hidden;
+  background:#000;
 }
 
-/* Mobile adjustments */
-@media (max-width: 600px){
-  iframe{height:360px}
+.video-wrap iframe{
+  width:100%;
+  height:auto;
+  aspect-ratio:16/9;
+  border:none;
+  display:block;
+}
+
+/* Portrait videos adapt automatically */
+@supports not (aspect-ratio: 16 / 9){
+  .video-wrap iframe{
+    height:360px;
+  }
 }
 
 .slider-row{
@@ -90,7 +116,10 @@ input[type=range]{flex:1}
 
 .card.unrated{outline:2px solid #ff6b6b}
 
-.footer{text-align:center;margin:2.5rem 0}
+.footer{
+  text-align:center;
+  margin:2.5rem 0
+}
 
 button{
   background:#6cb6ff;
@@ -158,7 +187,6 @@ const msg = document.getElementById("msg");
 const ratings = {};
 let total = 0;
 
-/* ========= OPTION A — CHROME SAFE VIDEO LOADER + TITLE ========= */
 async function loadVideos(){
   const res = await fetch(
     "https://raw.githubusercontent.com/vpsj/rotm/main/links.json",
@@ -180,14 +208,11 @@ async function loadVideos(){
     const slug = parts[slugIndex] || "";
 
     const title = slug
-  ? slug
-      .replace(/[_-]/g, " ")
-      .trim()
-      .toLowerCase()
-      .replace(/\b\w/g, c => c.toUpperCase())
-  : "Untitled Video";
-
-
+      ? slug
+          .replace(/[_-]/g," ")
+          .toLowerCase()
+          .replace(/\b\w/g,c=>c.toUpperCase())
+      : "Untitled Video";
 
     const card = document.createElement("div");
     card.className = "card unrated";
@@ -197,11 +222,13 @@ async function loadVideos(){
 
     card.innerHTML = `
       <h3>${title}</h3>
-      <iframe
-        src="${embedUrl}"
-        allow="autoplay; fullscreen"
-        loading="lazy"
-      ></iframe>
+      <div class="video-wrap">
+        <iframe
+          src="${embedUrl}"
+          allow="autoplay; fullscreen"
+          loading="lazy"
+        ></iframe>
+      </div>
       <a href="${url}" target="_blank">View on Reddit</a>
       <div class="slider-row">
         <input type="range" min="1" max="10" step="1">
