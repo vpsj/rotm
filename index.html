@@ -69,32 +69,33 @@ h1{margin-bottom:.8rem}
   margin-top:.6rem
 }
 
-/* ✅ FIX: dynamic video sizing */
 .video-wrap{
   width:100%;
+  background:#000;
   border-radius:10px;
   overflow:hidden;
-  background:#000;
 }
 
-/* CRITICAL FIX */
+/* DESKTOP / TABLET */
 .video-wrap iframe{
   width:100%;
-  height:80vh;               /* allows portrait videos to breathe */
-  max-height:90vh;
-  min-height:360px;          /* landscape still looks fine */
+  aspect-ratio:16 / 9;
   border:none;
   display:block;
   overflow:hidden;
 }
 
-/* Kill scrollbar everywhere */
-.video-wrap iframe::-webkit-scrollbar{
-  display:none;
+/* MOBILE — portrait friendly */
+@media (max-width: 768px){
+  .video-wrap iframe{
+    aspect-ratio:9 / 16;
+  }
 }
-.video-wrap iframe{
-  scrollbar-width:none;
-}
+
+/* Kill scrollbars everywhere */
+.video-wrap iframe::-webkit-scrollbar{display:none}
+.video-wrap iframe{scrollbar-width:none}
+
 
 
 input[type=range]{flex:1}
@@ -224,8 +225,8 @@ async function loadVideos(){
           src="${embedUrl}"
           allow="autoplay; fullscreen"
           loading="lazy"
-          scrolling="no"
-        ></iframe>
+          scrolling="no">
+        </iframe>
       </div>
       <a href="${url}" target="_blank">View on Reddit</a>
       <div class="slider-row">
@@ -268,4 +269,5 @@ loadVideos();
 
 </body>
 </html>
+
 
