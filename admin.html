@@ -282,16 +282,34 @@ function renderTemplate(){
   const sorted=[...Object.values(videos)].sort((a,b)=>b.total-a.total);
   if(!sorted.length) return;
 
-  const winner=sorted[0];
-  const others=sorted.slice(1,4);
+  const top = sorted;
+  const others = sorted.slice(1,4);
+
+  const op = v => v.author;
 
   templateBox.value =
-`Title: ✨ RailFan of the Month for [Month][Year] goes to u/${winner.author} for “${winner.title}” ✨
+`Title: ✨ RailFan of the Month for [Month][Year] goes to ‘${op(top[0])}’ for this “${top[0].title}”! ✨
+As a Reward, they receive a Special Flair + An entry into our ROTM Hall of Fame! [Details in Comments]
 
-Here are some of the other videos loved by both mods and the subreddit:
+---
 
-${others.map(v=>`* [${v.title}](${v.redditUrl}) by u/${v.author}`).join("\n")}`;
+**Mod Comment:**
+
+Congratulations to u/${op(top[0])} for becoming the [Month][Year] RailFan of the Month!
+
+If you also wish to see your name immortalized in the [ROTM Hall Of Fame](https://www.reddit.com/r/indianrailways/wiki/hof), get a mention in the sidebar of the subreddit, AND receive a [special flair](https://i.imgur.com/rJCJGMg.png) courtesy of the mods, just go through the [ROTM rules](https://www.reddit.com/r/indianrailways/wiki/rotm) and submit your own beautiful videos of Indian Railways!
+
+Here are some of the other videos loved by both mods and the subreddit that missed out (competition was quite close this time):
+
+${others.map(v=>`* [${v.title}](${v.redditUrl}) by u/${v.author}`).join("\n")}
+
+Congratulations again to the Winner and the runner-ups. The contest will run every month so all the wonderful RailFans of our sub will have plenty of chance to win!
+
+\\-  r/IndianRailways ModTeam
+
+https://preview.redd.it/57it9cmmxnsf1.jpeg?width=1991&format=pjpg&auto=webp&s=60782de2a8f33f7ff5df0921ab4a92246825b07f`;
 }
+
 
 /* ===================== NEW STATS LOGIC ONLY ===================== */
 let ratingDistChart, avgRatingChart;
@@ -301,9 +319,14 @@ function renderStats(){
 
   votes.forEach(v=>{
     const tr=document.createElement("tr");
-    const ts = v.timestamp?.seconds
-      ? new Date(v.timestamp.seconds * 1000).toLocaleString()
+    const rawTs = v.timestamp || v.votedAt || v.createdAt;
+const ts =
+  rawTs?.seconds
+    ? new Date(rawTs.seconds * 1000).toLocaleString()
+    : rawTs instanceof Date
+      ? rawTs.toLocaleString()
       : "";
+
     tr.innerHTML=`<td>${v.userId||"anon"}</td><td>${ts}</td>`;
     userLogBody.appendChild(tr);
   });
