@@ -69,29 +69,24 @@ h1{margin-bottom:.8rem}
   margin-top:.6rem
 }
 
+/* VIDEO */
 .video-wrap{
   width:100%;
   background:#000;
   border-radius:10px;
   overflow:hidden;
-  display:flex;
 }
 
 .video-wrap iframe{
   width:100%;
-  height:auto;
+  height:400px;          /* temporary until resized */
   border:none;
   display:block;
-
-  /* KEY FIX */
-  aspect-ratio:auto;
-  min-height:calc(100vw * 9 / 16);
-  max-height:90vh;
 }
 
-/* Kill scrollbars everywhere */
-.video-wrap iframe::-webkit-scrollbar{display:none}
-.video-wrap iframe{scrollbar-width:none}
+/* no scrollbars anywhere */
+iframe::-webkit-scrollbar{display:none}
+iframe{scrollbar-width:none}
 
 input[type=range]{flex:1}
 
@@ -168,8 +163,8 @@ const firebaseConfig = {
   appId: "1:219038953244:web:fee4db5c59ed2909e294d9"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+initializeApp(firebaseConfig);
+const db = getFirestore();
 
 const grid = document.getElementById("grid");
 const submit = document.getElementById("submit");
@@ -193,14 +188,11 @@ async function loadVideos(){
     if(!url.endsWith("/")) continue;
 
     const parts = url.split("/");
-    const idIndex = parts.indexOf("comments") + 1;
-    const slugIndex = idIndex + 1;
-
-    const postId = parts[idIndex];
-    const slug = parts[slugIndex] || "";
+    const postId = parts[parts.indexOf("comments")+1];
+    const slug = parts[parts.indexOf("comments")+2] || "";
 
     const title = slug
-      ? slug.replace(/[_-]/g," ").toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())
+      ? slug.replace(/[_-]/g," ").replace(/\b\w/g,c=>c.toUpperCase())
       : "Untitled Video";
 
     const card = document.createElement("div");
@@ -212,28 +204,17 @@ async function loadVideos(){
     card.innerHTML = `
       <h3>${title}</h3>
       <div class="video-wrap">
-        <iframe
-          src="${embedUrl}"
-          allow="autoplay; fullscreen"
-          loading="lazy"
-          scrolling="no">
-        </iframe>
+        <iframe src="${embedUrl}" allow="autoplay; fullscreen"></iframe>
       </div>
       <a href="${url}" target="_blank">View on Reddit</a>
-      <div class="slider-row">
-        <input type="range" min="1" max="10" step="1">
-        <div class="rating-bubble"></div>
-      </div>
+      <input type="range" min="1" max="10">
     `;
 
     grid.appendChild(card);
 
     const slider = card.querySelector("input");
-    const bubble = card.querySelector(".rating-bubble");
 
     slider.addEventListener("input",()=>{
-      bubble.style.display="flex";
-      bubble.textContent = slider.value;
       ratings[postId] = Number(slider.value);
       card.classList.remove("unrated");
 
@@ -244,13 +225,24 @@ async function loadVideos(){
   }
 }
 
+/* 🔥 THIS IS THE ACTUAL FIX 🔥 */
+/* Reddit sends iframe height via postMessage */
+window.addEventListener("message", e=>{
+  if(!e.data || !e.data.height) return;
+  document.querySelectorAll("iframe").forEach(f=>{
+    if(f.contentWindow === e.source){
+      f.style.height = e.data.height + "px";
+    }
+  });
+});
+
 submit.onclick = async ()=>{
   submit.disabled = true;
   msg.textContent = "Submitting…";
   await addDoc(collection(db,"votes"),{
-    userId: "anon_" + crypto.randomUUID(),
+    userId:"anon_"+crypto.randomUUID(),
     ratings,
-    createdAt: serverTimestamp()
+    createdAt:serverTimestamp()
   });
   msg.textContent = "✅ Votes submitted successfully";
 };
