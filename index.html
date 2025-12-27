@@ -42,7 +42,7 @@ h1{margin-bottom:.8rem}
 .grid{
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
-  gap:1.6rem; /* slightly more spacing for mobile scroll */
+  gap:1.6rem;
 }
 
 .card{
@@ -74,29 +74,24 @@ h1{margin-bottom:.8rem}
   background:#000;
   border-radius:10px;
   overflow:hidden;
+  display:flex;
 }
 
-/* DESKTOP / TABLET */
 .video-wrap iframe{
   width:100%;
-  aspect-ratio:16 / 9;
+  height:auto;
   border:none;
   display:block;
-  overflow:hidden;
-}
 
-/* MOBILE — portrait friendly */
-@media (max-width: 768px){
-  .video-wrap iframe{
-    aspect-ratio:9 / 16;
-  }
+  /* KEY FIX */
+  aspect-ratio:auto;
+  min-height:calc(100vw * 9 / 16);
+  max-height:90vh;
 }
 
 /* Kill scrollbars everywhere */
 .video-wrap iframe::-webkit-scrollbar{display:none}
 .video-wrap iframe{scrollbar-width:none}
-
-
 
 input[type=range]{flex:1}
 
@@ -164,7 +159,6 @@ button:disabled{opacity:.5}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-/* FIREBASE CONFIG — UNCHANGED */
 const firebaseConfig = {
   apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
   authDomain: "rotm-rating.firebaseapp.com",
@@ -206,10 +200,7 @@ async function loadVideos(){
     const slug = parts[slugIndex] || "";
 
     const title = slug
-      ? slug
-          .replace(/[_-]/g," ")
-          .toLowerCase()
-          .replace(/\b\w/g,c=>c.toUpperCase())
+      ? slug.replace(/[_-]/g," ").toLowerCase().replace(/\b\w/g,c=>c.toUpperCase())
       : "Untitled Video";
 
     const card = document.createElement("div");
@@ -269,5 +260,3 @@ loadVideos();
 
 </body>
 </html>
-
-
