@@ -114,7 +114,6 @@ textarea{
 <button onclick="copyTemplate()">Copy Template</button>
 </div>
 
-<!-- ===================== STATS TAB (ONLY MODIFIED SECTION) ===================== -->
 <div id="statsTab" class="card hidden">
 
 <h3>User Voting Log</h3>
@@ -135,12 +134,10 @@ textarea{
 <canvas id="avgRatingChart" height="160"></canvas>
 
 </div>
-<!-- =========================================================================== -->
 
 </div>
 
 <script>
-/* ================= FIREBASE CONFIG (UNCHANGED) ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyDGqbsUyj9CJq6NmaLR7jP14mHygnuQFDc",
   authDomain: "rotm-rating.firebaseapp.com",
@@ -174,17 +171,20 @@ auth.onAuthStateChanged(u=>{
 scoresTabBtn.onclick=()=>{scoresTab.classList.remove("hidden");statsTab.classList.add("hidden")}
 statsTabBtn.onclick=()=>{statsTab.classList.remove("hidden");scoresTab.classList.add("hidden")}
 
-/* ============ REDDIT HELPERS ============ */
+/* ================= FIX #1: SAFE REDDIT PARSER ================= */
 function sentenceCase(str){
   return str.replace(/\b\w/g,c=>c.toUpperCase());
 }
 
 function extractPostMeta(url){
-  const parts = url.replace(/\/$/,"").split("/");
-  const id = parts[parts.indexOf("comments")+1];
-  const slug = parts[parts.indexOf("comments")+2] || "untitled";
+  const idMatch = url.match(/comments\/([a-z0-9]+)\//i);
+  if(!idMatch) throw new Error("Invalid Reddit URL: " + url);
+
+  const slugMatch = url.match(/comments\/[a-z0-9]+\/([^\/]+)/i);
+  const slug = slugMatch ? slugMatch[1] : "untitled";
+
   return {
-    id,
+    id: idMatch[1],
     title: sentenceCase(slug.replace(/[_-]/g," ")),
     redditUrl: url
   };
@@ -200,11 +200,11 @@ async function fetchRedditData(url){
   };
 }
 
-/* ============ UPDATE VIDEOS BUTTON (UNCHANGED) ============ */
+/* ================= FIX #2: GUARANTEED REFRESH ================= */
 async function refreshVideos(){
   if(!confirm("This will replace ALL videos with latest links.json. Continue?")) return;
 
-  const res = await fetch(LINKS_JSON,{cache:"no-store"});
+  const res = await fetch(LINKS_JSON + "?t=" + Date.now());
   const urls = await res.json();
 
   const batch = db.batch();
@@ -228,7 +228,7 @@ async function refreshVideos(){
 }
 refreshVideosBtn.onclick = refreshVideos;
 
-/* ============ LOAD + CALCULATE (UNCHANGED) ============ */
+/* ================= REMAINS UNCHANGED ================= */
 function loadData(){
   db.collection("videos").onSnapshot(s=>{
     videos = {};
@@ -310,8 +310,6 @@ Congratulations again to the Winner and the runner-ups. The contest will run eve
 https://preview.redd.it/57it9cmmxnsf1.jpeg?width=1991&format=pjpg&auto=webp&s=60782de2a8f33f7ff5df0921ab4a92246825b07f`;
 }
 
-
-/* ===================== NEW STATS LOGIC ONLY ===================== */
 let ratingDistChart, avgRatingChart;
 
 function renderStats(){
@@ -320,12 +318,12 @@ function renderStats(){
   votes.forEach(v=>{
     const tr=document.createElement("tr");
     const rawTs = v.timestamp || v.votedAt || v.createdAt;
-const ts =
-  rawTs?.seconds
-    ? new Date(rawTs.seconds * 1000).toLocaleString()
-    : rawTs instanceof Date
-      ? rawTs.toLocaleString()
-      : "";
+    const ts =
+      rawTs?.seconds
+        ? new Date(rawTs.seconds * 1000).toLocaleString()
+        : rawTs instanceof Date
+          ? rawTs.toLocaleString()
+          : "";
 
     tr.innerHTML=`<td>${v.userId||"anon"}</td><td>${ts}</td>`;
     userLogBody.appendChild(tr);
@@ -370,7 +368,6 @@ const ts =
     }
   );
 }
-/* ================================================================= */
 
 copyTemplate=()=>navigator.clipboard.writeText(templateBox.value);
 resetBtn.onclick=()=>db.collection("votes").get().then(s=>s.forEach(d=>d.ref.delete()));
