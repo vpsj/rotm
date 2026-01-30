@@ -192,13 +192,21 @@ const msg = document.getElementById("msg");
 
 const ratings = {};
 let total = 0;
+	
+function shuffleArray(arr){
+  for(let i = arr.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
 async function loadVideos(){
   const res = await fetch(
     "https://raw.githubusercontent.com/vpsj/rotm/main/links.json",
     { cache:"no-store" }
   );
-  const urls = await res.json();
+  const urls = shuffleArray(await res.json());
 
   total = urls.length;
   progress.textContent = `0 / ${total} videos rated`;
@@ -285,3 +293,4 @@ loadVideos();
 
 </body>
 </html>
+
