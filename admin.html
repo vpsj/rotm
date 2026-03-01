@@ -90,6 +90,7 @@ textarea{
   <button id="statsTabBtn">Detailed Votes & Stats</button>
   <button class="warn" id="refreshVideosBtn">Update Videos from links.json</button>
   <button class="danger" id="resetBtn">Reset All Votes</button>
+  <button id="exportBtn">Export All Data (CSV)</button>
   <button id="logoutBtn">Logout</button>
 </div>
 
@@ -368,7 +369,93 @@ function renderStats(){
     }
   );
 }
+function exportCSV(){
+  let csv = [];
 
+  /* ================= VIDEO SCORES ================= */
+  csv.push("=== VIDEO SCORES ===");
+  csv.push("Rank,Title,Reddit URL,Upvotes,Upvote Points,Vote Points,Total");
+
+  const sorted = [...Object.values(videos)].sort((a,b)=>b.total-a.total);
+  sorted.forEach((v,i)=>{
+    csv.push(
+      `${i+1},"${v.title}",${v.redditUrl},${v.upvotes},${v.upvotePoints},${v.votePoints},${v.total}`
+    );
+  });
+
+  csv.push("");
+
+  /* ================= RAW VOTES ================= */
+  csv.push("=== RAW VOTES ===");
+  csv.push("User,Video ID,Video Title,Rating,Timestamp");
+
+  votes.forEach(v=>{
+    const rawTs = v.timestamp || v.votedAt || v.createdAt;
+    const ts =
+      rawTs?.seconds
+        ? new Date(rawTs.seconds * 1000).toISOString()
+        : rawTs instanceof Date
+          ? rawTs.toISOString()
+          : "";
+
+    Object.entries(v.ratings||{}).forEach(([vid,r])=>{
+      csv.push(
+        `${v.userId||"anon"},${vid},"${videos[vid]?.title||vid}",${r},${ts}`
+      );
+    });
+  });
+
+  csv.push("");
+
+  /* ================= RATING DISTRIBUTION ================= */
+  csv.push("=== RATING DISTRIBUTION ===");
+  csv.push("Rating,Count");
+
+  const buckets = {};
+  votes.forEach(v=>{
+    Object.values(v.ratings||{}).forEach(r=>{
+      buckets[r]=(buckets[r]||0)+1;
+    });
+  });
+
+  Object.keys(buckets).sort((a,b)=>a-b).forEach(r=>{
+    csv.push(`${r},${buckets[r]}`);
+  });
+
+  csv.push("");
+
+  /* ================= AVERAGE PER VIDEO ================= */
+  csv.push("=== AVERAGE RATING PER VIDEO ===");
+  csv.push("Video ID,Title,Average Rating");
+
+  const perVideo = {};
+  votes.forEach(v=>{
+    Object.entries(v.ratings||{}).forEach(([vid,r])=>{
+      if(!perVideo[vid]) perVideo[vid]={sum:0,count:0};
+      perVideo[vid].sum+=r;
+      perVideo[vid].count++;
+    });
+  });
+
+  Object.keys(perVideo).forEach(vid=>{
+    const avg = (perVideo[vid].sum/perVideo[vid].count).toFixed(2);
+    csv.push(`${vid},"${videos[vid]?.title||vid}",${avg}`);
+  });
+
+  /* ================= DOWNLOAD ================= */
+  const blob = new Blob([csv.join("\n")], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `ROTM_export_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById("exportBtn").onclick = exportCSV;
+  
 copyTemplate=()=>navigator.clipboard.writeText(templateBox.value);
 resetBtn.onclick=()=>db.collection("votes").get().then(s=>s.forEach(d=>d.ref.delete()));
 logoutBtn.onclick=()=>auth.signOut();
