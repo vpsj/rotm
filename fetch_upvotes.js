@@ -61,7 +61,22 @@ function extractPostId(url) {
 async function main() {
   const me = await reddit.getMe();
   console.log("Logged in as:", me.name);
+  const validPostIds = links
+  .map(extractPostId)
+  .filter(Boolean);
 
+// Delete Firestore videos that are no longer in links.json
+
+  const snapshot = await db.collection("videos").get();
+
+  for (const doc of snapshot.docs) {
+    if (!validPostIds.includes(doc.id)) {
+      await doc.ref.delete();
+      console.log("Deleted old video:", doc.id);
+  }
+}      
+
+  
   for (const url of links) {
     try {
       const postId = extractPostId(url);
