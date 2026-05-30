@@ -192,9 +192,26 @@ function extractPostMeta(url){
 }
 
 async function fetchRedditData(url){
-  const res = await fetch(url + ".json");
-  const j = await res.json();
-  const post = j[0].data.children[0].data;
+
+  const idMatch = url.match(/comments\/([a-z0-9]+)\//i);
+
+  if(!idMatch){
+    return {
+      upvotes: 0,
+      author: "unknown"
+    };
+  }
+
+  const postId = idMatch[1];
+
+  const res = await fetch(
+    `https://api.reddit.com/api/info?id=t3_${postId}`
+  );
+
+  const json = await res.json();
+
+  const post = json.data.children[0].data;
+
   return {
     upvotes: post.ups || 0,
     author: post.author || "unknown"
@@ -216,15 +233,22 @@ async function refreshVideos(){
 
   const meta = extractPostMeta(url);
 
-  console.log("Adding:", meta.title);
+  const reddit = await fetchRedditData(url);
+
+  console.log(
+    "Adding:",
+    meta.title,
+    reddit.upvotes,
+    reddit.author
+  );
 
   batch.set(
     db.collection("videos").doc(meta.id),
     {
       title: meta.title,
       redditUrl: url,
-      upvotes: 0,
-      author: "unknown"
+      upvotes: reddit.upvotes,
+      author: reddit.author
     }
   );
 }
