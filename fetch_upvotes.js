@@ -1,10 +1,14 @@
 const admin = require("firebase-admin");
 const fs = require("fs");
-const fetch = require("node-fetch");
-console.log("REDDIT_USERNAME =", process.env.REDDIT_USERNAME);
-console.log("REDDIT_CLIENT_ID exists =", !!process.env.REDDIT_CLIENT_ID);
+const snoowrap = require("snoowrap");
 
-process.exit(0);
+const reddit = new snoowrap({
+  userAgent: process.env.REDDIT_USER_AGENT,
+  clientId: process.env.REDDIT_CLIENT_ID,
+  clientSecret: process.env.REDDIT_CLIENT_SECRET,
+  username: process.env.REDDIT_USERNAME,
+  password: process.env.REDDIT_PASSWORD
+});
 
 // ---- Firebase Admin via ENV (GitHub Actions safe) ----
 admin.initializeApp({
@@ -49,4 +53,9 @@ async function main() {
   console.log("Done.");
 }
 
-main();
+async function testLogin() {
+  const me = await reddit.getMe();
+  console.log("Logged in as:", me.name);
+}
+
+testLogin();
