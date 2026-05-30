@@ -213,24 +213,29 @@ async function refreshVideos(){
   old.forEach(d=>batch.delete(d.ref));
 
   for(const url of urls){
-    const meta = extractPostMeta(url);
-    batch.set(db.collection("videos").doc(meta.id),{
-  title: meta.title,
-  redditUrl: url,
-  upvotes: 0,
-  author: "unknown"
-});
 
-    batch.set(db.collection("videos").doc(meta.id),{
+  const meta = extractPostMeta(url);
+
+  console.log("Adding:", meta.title);
+
+  batch.set(
+    db.collection("videos").doc(meta.id),
+    {
       title: meta.title,
       redditUrl: url,
-      upvotes: reddit.upvotes,
-      author: reddit.author
-    });
-  }
+      upvotes: 0,
+      author: "unknown"
+    }
+  );
+}
 
   await batch.commit();
-  alert("Videos updated from links.json");
+
+console.log("Batch committed successfully");
+
+alert("Videos updated from links.json");
+
+location.reload();
 }
 refreshVideosBtn.onclick = refreshVideos;
 
