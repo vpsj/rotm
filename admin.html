@@ -220,50 +220,41 @@ async function fetchRedditData(url){
 
 /* ================= FIX #2: GUARANTEED REFRESH ================= */
 async function refreshVideos(){
-  if(!confirm("This will replace ALL videos with latest links.json. Continue?")) return;
+
+  if(!confirm("Replace Firestore videos with links.json?")) return;
 
   const res = await fetch(LINKS_JSON + "?t=" + Date.now());
   const urls = await res.json();
 
-  const old = await db.collection("videos").get();
+  const newIds = urls.map(url=>{
+    const match = url.match(/comments\/([a-z0-9]+)\//i);
+    return match ? match[1] : null;
+  }).filter(Boolean);
 
-for (const doc of old.docs) {
-  await doc.ref.delete();
-}
+  const snapshot = await db.collection("videos").get();
 
-  for(const url of urls){
+  const existingDocs = {};
 
-  const meta = extractPostMeta(url);
+  snapshot.forEach(doc=>{
+    existingDocs[doc.id] = doc;
+  });
 
-  const reddit = await fetchRedditData(url);
+  const batch = db.batch();
 
-  console.log(
-    "Adding:",
-    meta.title,
-    reddit.upvotes,
-    reddit.author
-  );
+  // delete videos no longer in links.json
 
-  batch.set(
-    db.collection("videos").doc(meta.id),
-    {
-      title: meta.title,
-      redditUrl: url,
-      upvotes: reddit.upvotes,
-      author: reddit.author
+  snapshot.forEach(doc=>{
+    if(!newIds.includes(doc.id)){
+      batch.delete(doc.ref);
     }
-  );
-}
+  });
 
   await batch.commit();
 
-console.log("Batch committed successfully");
+  alert("Sync complete. GitHub Action will populate new videos automatically.");
 
-alert("Videos updated from links.json");
-
-location.reload();
+  location.reload();
 }
-refreshVideosBtn.onclick = refreshVideos;
 
 /* ================= REMAINS UNCHANGED ================= */
 function loadData(){
