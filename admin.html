@@ -225,9 +225,11 @@ async function refreshVideos(){
   const res = await fetch(LINKS_JSON + "?t=" + Date.now());
   const urls = await res.json();
 
-  const batch = db.batch();
   const old = await db.collection("videos").get();
-  old.forEach(d=>batch.delete(d.ref));
+
+for (const doc of old.docs) {
+  await doc.ref.delete();
+}
 
   for(const url of urls){
 
