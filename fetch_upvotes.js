@@ -1,6 +1,10 @@
 const admin = require("firebase-admin");
 const fs = require("fs");
 const fetch = require("node-fetch");
+console.log("REDDIT_USERNAME =", process.env.REDDIT_USERNAME);
+console.log("REDDIT_CLIENT_ID exists =", !!process.env.REDDIT_CLIENT_ID);
+
+process.exit(0);
 
 // ---- Firebase Admin via ENV (GitHub Actions safe) ----
 admin.initializeApp({
