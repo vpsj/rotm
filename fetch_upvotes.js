@@ -53,19 +53,56 @@ async function main() {
   console.log("Done.");
 }
 
-async function testLogin() {
-  console.log("CLIENT_ID length:", process.env.REDDIT_CLIENT_ID?.length);
-  console.log("CLIENT_SECRET length:", process.env.REDDIT_CLIENT_SECRET?.length);
-  console.log("USERNAME:", process.env.REDDIT_USERNAME);
-  console.log("PASSWORD length:", process.env.REDDIT_PASSWORD?.length);
-  console.log("USER_AGENT:", process.env.REDDIT_USER_AGENT);
-
-  const me = await reddit.getMe();
-  console.log("Logged in as:", me.name);
+function extractPostId(url) {
+  const match = url.match(/comments\/([a-z0-9]+)\//i);
+  return match ? match[1] : null;
 }
 
-testLogin().catch(err => {
-  console.error("LOGIN FAILED:");
+async function main() {
+  const me = await reddit.getMe();
+  console.log("Logged in as:", me.name);
+
+  for (const url of links) {
+    try {
+      const postId = extractPostId(url);
+
+      if (!postId) {
+        console.log("Could not extract ID from:", url);
+        continue;
+      }
+
+      const post = await reddit.getSubmission(postId).fetch();
+
+      await db.collection("videos").doc(postId).set(
+        {
+          id: postId,
+          title: post.title,
+          redditUrl: url,
+          upvotes: post.score,
+          author: post.author?.name || "unknown",
+          thumbnail: post.thumbnail,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp()
+        },
+        { merge: true }
+      );
+
+      console.log(
+        "Saved:",
+        post.title,
+        "| Upvotes:",
+        post.score
+      );
+
+    } catch (err) {
+      console.error("Failed:", url);
+      console.error(err.message);
+    }
+  }
+
+  console.log("Done.");
+}
+
+main().catch(err => {
   console.error(err);
   process.exit(1);
 });
