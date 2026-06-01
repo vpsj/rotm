@@ -315,27 +315,38 @@ function renderTemplate(){
 
   const op = v => v.author;
 
+// Previous month (because ROTM is announced on the 1st for the month that just ended)
+  const rotmDate = new Date();
+  rotmDate.setMonth(rotmDate.getMonth() - 1);
+
+  const monthYear = rotmDate.toLocaleString('en-US', {
+    month: 'long',
+    year: 'numeric'
+  });
+
   templateBox.value =
-`Title: ✨ RailFan of the Month for [Month][Year] goes to ‘${op(top[0])}’ for this “${top[0].title}”! ✨
+`Title: ✨ RailFan of the Month for ${monthYear} goes to ‘${op(top[0])}’ for this “${top[0].title}”! ✨
 As a Reward, they receive a Special Flair + An entry into our ROTM Hall of Fame! [Details in Comments]
 
 ---
 
 **Mod Comment:**
 
-Congratulations to u/${op(top[0])} for becoming the [Month][Year] RailFan of the Month!
+Congratulations to u/${op(top[0])} for becoming the ${monthYear} RailFan of the Month!
 
-If you also wish to see your name immortalized in the [ROTM Hall Of Fame](https://www.reddit.com/r/indianrailways/wiki/hof), get a mention in the sidebar of the subreddit, AND receive a [special flair](https://i.imgur.com/rJCJGMg.png) courtesy of the mods, just go through the [ROTM rules](https://www.reddit.com/r/indianrailways/wiki/rotm) and submit your own beautiful videos of Indian Railways!
+If you also wish to see your name immortalized in the [ROTM Hall Of Fame](https://sh.reddit.com/r/indianrailways/wiki/hof), get a mention in the sidebar of the subreddit, AND receive a [special flair](https://i.imgur.com/rJCJGMg.png) courtesy of the mods, just go through the [ROTM rules](https://www.reddit.com/r/indianrailways/wiki/rotm) and submit your own beautiful videos of Indian Railways!
 
-Here are some of the other videos loved by both mods and the subreddit that missed out (competition was quite close this time):
+Here are the full links of the videos loved by both, Mods and the Subreddit Members alike:
 
-${others.map(v=>`* [${v.title}](${v.redditUrl}) by u/${v.author}`).join("\n")}
+${top.slice(0,3).map((v,i)=>
+  `* #${i+1}: [${v.title}](${v.redditUrl}) by u/${v.author}`
+).join("\n")}
 
 Congratulations again to the Winner and the runner-ups. The contest will run every month so all the wonderful RailFans of our sub will have plenty of chance to win!
 
 \\-  r/IndianRailways ModTeam
 
-https://preview.redd.it/57it9cmmxnsf1.jpeg?width=1991&format=pjpg&auto=webp&s=60782de2a8f33f7ff5df0921ab4a92246825b07f`;
+`;
 }
 
 let ratingDistChart, avgRatingChart;
