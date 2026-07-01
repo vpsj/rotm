@@ -5,7 +5,7 @@
 <title>ROTM Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script type="text/javascript" src="https://ff.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=cZRWwhOBCkem4KWil3O7u_IULtFX68UYPFie1UiVLHcD3Rf9abSkt3J27veXxPh_neUhBdAw1v9c-akdJb0ln7SRbeZ_syeOZJ4_o7v_4mvAftY8PW4H8G_Dfkf84egUXA6kCT4Bwj-TByqPqDT3DORdQwZGGJpt3HtGRR1WVgkT5_6dpTjJyYs9AaTGdNDsElK4jTyNVnDlwh2RYUrLMJBzyvZyjfQvAeWp1qQ-p1mDKhbv5WGePFqEZGoGSiJe18ofhd1-2UBE2QlebGERT_ZsE-m-X7F-4RcG7yBLNTi67R7-W_MtUkIWzFSAM5g4HIxktT7wA-O0Tayw2OOZdA" charset="UTF-8"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -151,6 +151,8 @@ firebase.initializeApp(firebaseConfig);
 
 const auth = firebase.auth();
 const db = firebase.firestore();
+const provider = new firebase.auth.GoogleAuthProvider();
+const ADMIN_EMAILS = ["vpsjdon@gmail.com"];
 
 const LINKS_JSON = "https://raw.githubusercontent.com/vpsj/rotm/main/links.json";
 
@@ -163,8 +165,23 @@ const userLogBody = document.getElementById("userLogBody");
 let videos = {};
 let votes = [];
 
-auth.onAuthStateChanged(u=>{
-  if(!u) return;
+auth.onAuthStateChanged(async u=>{
+  if(!u){
+    try{
+      const result = await auth.signInWithPopup(provider);
+      return;
+    }catch(e){
+      console.error(e);
+      return;
+    }
+  }
+
+  if(!ADMIN_EMAILS.includes(u.email)){
+    alert("Access denied");
+    await auth.signOut();
+    return;
+  }
+
   userEmail.textContent = "Signed in as " + u.email;
   loadData();
 });
@@ -496,7 +513,7 @@ document.getElementById("exportBtn").onclick = exportCSV;
   
 copyTemplate=()=>navigator.clipboard.writeText(templateBox.value);
 resetBtn.onclick=()=>db.collection("votes").get().then(s=>s.forEach(d=>d.ref.delete()));
-logoutBtn.onclick=()=>auth.signOut();
+logoutBtn.onclick=()=>auth.signOut().then(()=>location.reload());
 </script>
 </body>
 </html>
