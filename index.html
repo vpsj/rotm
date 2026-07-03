@@ -79,21 +79,13 @@ h1{margin-bottom:.8rem}
   overflow:hidden;
 }
 
-.video-wrap iframe{
+.video-wrap video{
   width:100%;
-  height:100%;
-  border:0;
+  height:auto;
   display:block;
+  border:0;
 }
 
-/* Global scrollbar nuking */
-iframe{
-  scrollbar-width:none !important;
-}
-iframe::-webkit-scrollbar{
-  display:none !important;
-  width:0 !important;
-}
 
 /* RATING */
 .slider-row{
@@ -221,12 +213,7 @@ async function loadVideos(){
     card.innerHTML = `
       <h3>${title}</h3>
       <div class="video-wrap">
-        <iframe
-  	src="https://www.reddit.com/mediaembed/${postId}?autoplay=1&muted=1&controls=1"
-  	allow="autoplay; fullscreen"
-  	scrolling="no">
-	</iframe>
-
+        <video controls muted playsinline preload="metadata"></video>
       </div>
       <a href="${url}" target="_blank">View on Reddit</a>
       <div class="slider-row">
@@ -237,19 +224,22 @@ async function loadVideos(){
 
     grid.appendChild(card);
 
-    /* === ONLY FIX: JSON-based height classification === */
-    const iframe = card.querySelector("iframe");
-const wrap = card.querySelector(".video-wrap");
+    const video = card.querySelector("video");
+    const wrap = card.querySelector(".video-wrap");
 
-try{
-  const r = await fetch(url + ".json");
-  const j = await r.json();
-  const v = j[0].data.children[0].data.secure_media?.reddit_video;
+    try{
+      const r = await fetch(url + ".json");
+      const j = await r.json();
+      const v = j[0].data.children[0].data.secure_media?.reddit_video;
 
-  if (v) {
-    wrap.style.aspectRatio = `${v.width} / ${v.height}`;
-  }
-}catch{}
+      if(v){
+        video.src = v.fallback_url;
+        video.muted = true;
+        video.playsInline = true;
+        video.preload = "metadata";
+        wrap.style.aspectRatio = `${v.width} / ${v.height}`;
+      }
+    }catch{}
 
     const slider = card.querySelector("input");
     const bubble = card.querySelector(".rating-bubble");
@@ -283,4 +273,3 @@ loadVideos();
 
 </body>
 </html>
-
