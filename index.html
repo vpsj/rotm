@@ -79,13 +79,26 @@ h1{margin-bottom:.8rem}
   overflow:hidden;
 }
 
-.video-wrap video{
+
+
+/* DEFAULT = landscape */
+.video-wrap iframe{
   width:100%;
-  height:auto;
-  display:block;
+  height:20vh;
+  min-height:220px;
+  max-height:520px;
   border:0;
+  display:block;
 }
 
+/* Global scrollbar nuking */
+iframe{
+  scrollbar-width:none !important;
+}
+iframe::-webkit-scrollbar{
+  display:none !important;
+  width:0 !important;
+}
 
 /* RATING */
 .slider-row{
@@ -213,7 +226,12 @@ async function loadVideos(){
     card.innerHTML = `
       <h3>${title}</h3>
       <div class="video-wrap">
-        <video controls muted playsinline preload="metadata"></video>
+        <iframe
+  	src="https://www.reddit.com/mediaembed/${postId}?autoplay=1&muted=1&controls=1"
+  	allow="autoplay; fullscreen"
+  	scrolling="no">
+	</iframe>
+
       </div>
       <a href="${url}" target="_blank">View on Reddit</a>
       <div class="slider-row">
@@ -224,21 +242,23 @@ async function loadVideos(){
 
     grid.appendChild(card);
 
-    const video = card.querySelector("video");
-    const wrap = card.querySelector(".video-wrap");
-
+    /* === ONLY FIX: JSON-based height classification === */
+    const iframe = card.querySelector("iframe");
     try{
       const r = await fetch(url + ".json");
       const j = await r.json();
       const v = j[0].data.children[0].data.secure_media?.reddit_video;
+      if (v) {
+  const ratio = v.width / v.height;
 
-      if(v){
-        video.src = v.fallback_url;
-        video.muted = true;
-        video.playsInline = true;
-        video.preload = "metadata";
-        wrap.style.aspectRatio = `${v.width} / ${v.height}`;
-      }
+  if (ratio >= 0.8) {
+    iframe.src += "&autoplay=1";
+    iframe.style.height = "20vh";
+  } else {
+    iframe.style.height = "42vh";
+  }
+}
+
     }catch{}
 
     const slider = card.querySelector("input");
@@ -266,7 +286,7 @@ submit.onclick = async ()=>{
     createdAt:serverTimestamp()
   });
   msg.textContent = "✅ Votes submitted successfully";
-}; 
+};
 
 loadVideos();
 </script>
