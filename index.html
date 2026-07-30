@@ -74,19 +74,15 @@ h1{margin-bottom:.8rem}
 
 .video-wrap{
   width:100%;
+  aspect-ratio:16 / 9;
   background:#000;
   border-radius:8px;
   overflow:hidden;
 }
 
-
-
-/* DEFAULT = landscape */
 .video-wrap iframe{
   width:100%;
-  height:20vh;
-  min-height:220px;
-  max-height:520px;
+  height:100%;
   border:0;
   display:block;
 }
@@ -242,24 +238,23 @@ async function loadVideos(){
 
     grid.appendChild(card);
 
-    /* === ONLY FIX: JSON-based height classification === */
-    const iframe = card.querySelector("iframe");
-    try{
-      const r = await fetch(url + ".json");
-      const j = await r.json();
-      const v = j[0].data.children[0].data.secure_media?.reddit_video;
-      if (v) {
-  const ratio = v.width / v.height;
+  /* === Set embed to the video's actual aspect ratio === */
+const wrap = card.querySelector(".video-wrap");
 
-  if (ratio >= 0.8) {
-    iframe.src += "&autoplay=1";
-    iframe.style.height = "20vh";
-  } else {
-    iframe.style.height = "42vh";
+try{
+  const r = await fetch(url + ".json");
+  const j = await r.json();
+
+  const post = j[0].data.children[0].data;
+
+  const v =
+    post.secure_media?.reddit_video ||
+    post.media?.reddit_video;
+
+  if(v?.width && v?.height){
+    wrap.style.aspectRatio = `${v.width} / ${v.height}`;
   }
-}
-
-    }catch{}
+}catch{}
 
     const slider = card.querySelector("input");
     const bubble = card.querySelector(".rating-bubble");
