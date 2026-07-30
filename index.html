@@ -74,18 +74,11 @@ h1{margin-bottom:.8rem}
 
 .reddit-embed-wrap{
   width:100%;
-  height:800px;
   overflow:hidden;
-  border-radius:8px;
-  background:#000;
 }
 
-.reddit-embed-wrap iframe{
-  width:100%;
-  height:1000px;
-  border:0;
-  display:block;
-  transform:translateY(-200px);
+.reddit-embed-wrap blockquote{
+  margin:0;
 }
 
 /* RATING */
@@ -211,14 +204,11 @@ async function loadVideos(){
     const card = document.createElement("div");
     card.className = "card unrated";
 
-    card.innerHTML = `
+   card.innerHTML = `
   <div class="reddit-embed-wrap">
-    <iframe
-      src="https://publish.reddit.com/embed?url=${encodeURIComponent(url)}"
-      loading="lazy"
-      allow="fullscreen"
-      scrolling="no">
-    </iframe>
+    <blockquote class="reddit-embed-bq">
+      <a href="${url}">${title}</a>
+    </blockquote>
   </div>
 
   <div class="slider-row">
@@ -232,7 +222,7 @@ async function loadVideos(){
     const slider = card.querySelector("input");
     const bubble = card.querySelector(".rating-bubble");
 
-       slider.addEventListener("input",()=>{
+         slider.addEventListener("input",()=>{
       ratings[postId] = Number(slider.value);
       bubble.style.display="flex";
       bubble.textContent = slider.value;
@@ -243,7 +233,15 @@ async function loadVideos(){
       submit.disabled = done !== total;
     });
   }
+
+  /* All Reddit blockquotes now exist, so load Reddit's renderer */
+  const redditScript = document.createElement("script");
+  redditScript.src = "https://embed.reddit.com/widgets.js";
+  redditScript.async = true;
+  redditScript.charset = "UTF-8";
+  document.body.appendChild(redditScript);
 }
+
 submit.onclick = async ()=>{
   submit.disabled = true;
   msg.textContent = "Submitting…";
