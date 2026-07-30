@@ -72,28 +72,13 @@ h1{margin-bottom:.8rem}
   margin:.6rem 0
 }
 
-.video-wrap{
+.reddit-embed-wrap{
   width:100%;
-  aspect-ratio:16 / 9;
-  background:#000;
-  border-radius:8px;
   overflow:hidden;
 }
 
-.video-wrap iframe{
-  width:100%;
-  height:100%;
-  border:0;
-  display:block;
-}
-
-/* Global scrollbar nuking */
-iframe{
-  scrollbar-width:none !important;
-}
-iframe::-webkit-scrollbar{
-  display:none !important;
-  width:0 !important;
+.reddit-embed-wrap blockquote{
+  margin:0;
 }
 
 /* RATING */
@@ -166,7 +151,8 @@ button:disabled{opacity:.5}
     <div id="msg"></div>
   </div>
 </div>
-
+	
+<script src="https://embed.redditmedia.com/widgets/platform.js" charset="UTF-8"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
@@ -220,46 +206,24 @@ async function loadVideos(){
     card.className = "card unrated";
 
     card.innerHTML = `
-      <h3>${title}</h3>
-      <div class="video-wrap">
-        <iframe
-  	src="https://www.reddit.com/mediaembed/${postId}?autoplay=1&muted=1&controls=1"
-  	allow="autoplay; fullscreen"
-  	scrolling="no">
-	</iframe>
+  <div class="reddit-embed-wrap">
+    <blockquote class="reddit-card">
+      <a href="${url}">${title}</a>
+    </blockquote>
+  </div>
 
-      </div>
-      <a href="${url}" target="_blank">View on Reddit</a>
-      <div class="slider-row">
-        <input type="range" min="1" max="10">
-        <div class="rating-bubble"></div>
-      </div>
-    `;
+  <div class="slider-row">
+    <input type="range" min="1" max="10">
+    <div class="rating-bubble"></div>
+  </div>
+`;
 
     grid.appendChild(card);
-
-  /* === Set embed to the video's actual aspect ratio === */
-const wrap = card.querySelector(".video-wrap");
-
-try{
-  const r = await fetch(url + ".json");
-  const j = await r.json();
-
-  const post = j[0].data.children[0].data;
-
-  const v =
-    post.secure_media?.reddit_video ||
-    post.media?.reddit_video;
-
-  if(v?.width && v?.height){
-    wrap.style.aspectRatio = `${v.width} / ${v.height}`;
-  }
-}catch{}
 
     const slider = card.querySelector("input");
     const bubble = card.querySelector(".rating-bubble");
 
-    slider.addEventListener("input",()=>{
+       slider.addEventListener("input",()=>{
       ratings[postId] = Number(slider.value);
       bubble.style.display="flex";
       bubble.textContent = slider.value;
@@ -270,6 +234,9 @@ try{
       submit.disabled = done !== total;
     });
   }
+
+  /* Render all Reddit post embeds */
+  window.__REDDIT_EMBED__?.onDOMContentLoaded?.();
 }
 
 submit.onclick = async ()=>{
