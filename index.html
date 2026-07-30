@@ -75,10 +75,14 @@ h1{margin-bottom:.8rem}
 .reddit-embed-wrap{
   width:100%;
   overflow:hidden;
+  border-radius:8px;
 }
 
-.reddit-embed-wrap blockquote{
-  margin:0;
+.reddit-embed-wrap iframe{
+  width:100%;
+  height:600px;
+  border:0;
+  display:block;
 }
 
 /* RATING */
@@ -152,7 +156,6 @@ button:disabled{opacity:.5}
   </div>
 </div>
 	
-<script src="https://embed.redditmedia.com/widgets/platform.js" charset="UTF-8"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
@@ -207,9 +210,12 @@ async function loadVideos(){
 
     card.innerHTML = `
   <div class="reddit-embed-wrap">
-    <blockquote class="reddit-card">
-      <a href="${url}">${title}</a>
-    </blockquote>
+    <iframe
+      src="https://publish.reddit.com/embed?url=${encodeURIComponent(url)}"
+      loading="lazy"
+      allow="fullscreen"
+      scrolling="no">
+    </iframe>
   </div>
 
   <div class="slider-row">
@@ -234,11 +240,7 @@ async function loadVideos(){
       submit.disabled = done !== total;
     });
   }
-
-  /* Render all Reddit post embeds */
-  window.__REDDIT_EMBED__?.onDOMContentLoaded?.();
 }
-
 submit.onclick = async ()=>{
   submit.disabled = true;
   msg.textContent = "Submitting…";
