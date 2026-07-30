@@ -77,6 +77,12 @@ textarea{
   padding:12px;
   font-family:monospace;
 }
+.video-cell .author{
+  font-size:0.82em;
+  color:var(--muted);
+  white-space:nowrap;
+  margin-left:6px;
+}
 </style>
 </head>
 
@@ -314,7 +320,10 @@ function renderScores(){
     if(i===2)tr.classList.add("top3");
     tr.innerHTML=`
       <td>${i+1}</td>
-      <td><a href="${v.redditUrl}" target="_blank">${v.title}</a></td>
+      <td class="video-cell">
+  <a href="${v.redditUrl}" target="_blank">${v.title}</a>
+  <span class="author">by u/${v.author || "unknown"}</span>
+</td>
       <td>${v.upvotes}</td>
       <td>${v.upvotePoints}</td>
       <td>${v.votePoints}</td>
