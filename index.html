@@ -39,6 +39,33 @@ h1{margin-bottom:.8rem}
   padding:1rem
 }
 
+/* COUNTDOWN */
+.countdown{
+  text-align:center;
+  margin:2rem auto 2.5rem;
+}
+
+.countdown-label{
+  font-size:1.1rem;
+  color:#cfd3da;
+  margin-bottom:.4rem;
+}
+
+#countdownTimer{
+  font-size:clamp(3rem,9vw,6rem);
+  line-height:1;
+  font-weight:900;
+  letter-spacing:.05em;
+  font-variant-numeric:tabular-nums;
+  color:#6cb6ff;
+}
+
+#countdownDeadline{
+  margin-top:.8rem;
+  color:#cfd3da;
+  font-size:1rem;
+}
+
 /* ===== MASONRY GRID FIX ===== */
 .grid{
   display:block;
@@ -141,6 +168,11 @@ button:disabled{opacity:.5}
     </ul>
     <p><b>PS:</b> You must rate all the videos to submit your votes</p>
   </div>
+	<div class="countdown">
+    <div class="countdown-label">Voting will end in</div>
+    <div id="countdownTimer">00:00:00</div>
+    <div id="countdownDeadline"></div>
+  </div>
 </header>
 
 <div class="container">
@@ -173,7 +205,84 @@ const msg = document.getElementById("msg");
 
 const ratings = {};
 let total = 0;
-	
+/* ===== VOTING COUNTDOWN ===== */
+
+const countdownTimer = document.getElementById("countdownTimer");
+const countdownDeadline = document.getElementById("countdownDeadline");
+
+function getVotingDeadline(){
+
+  const now = new Date();
+
+  // Current date/time in IST
+  const istNow = new Date(
+    now.toLocaleString("en-US", {timeZone:"Asia/Kolkata"})
+  );
+
+  let year = istNow.getFullYear();
+  let month = istNow.getMonth();
+
+  /*
+    If we're already past the 1st at 12 PM,
+    target the 1st of next month.
+  */
+  if(
+    istNow.getDate() > 1 ||
+    (istNow.getDate() === 1 && istNow.getHours() >= 12)
+  ){
+    month++;
+
+    if(month > 11){
+      month = 0;
+      year++;
+    }
+  }
+
+  // 12:00 PM IST = 06:30 UTC
+  return new Date(Date.UTC(year, month, 1, 6, 30, 0));
+}
+
+
+const votingDeadline = getVotingDeadline();
+
+countdownDeadline.textContent =
+  "Deadline: " +
+  votingDeadline.toLocaleString("en-IN",{
+    timeZone:"Asia/Kolkata",
+    day:"numeric",
+    month:"long",
+    year:"numeric",
+    hour:"numeric",
+    minute:"2-digit",
+    hour12:true
+  }) +
+  " IST";
+
+
+function updateCountdown(){
+
+  const now = new Date();
+  let remaining = votingDeadline.getTime() - now.getTime();
+
+  if(remaining < 0) remaining = 0;
+
+  const totalSeconds = Math.floor(remaining / 1000);
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  countdownTimer.textContent =
+    String(hours).padStart(2,"0") + ":" +
+    String(minutes).padStart(2,"0") + ":" +
+    String(seconds).padStart(2,"0");
+}
+
+updateCountdown();
+setInterval(updateCountdown,1000);
+
+
+/* ===== END COUNTDOWN ===== */	
 function shuffleArray(arr){
   for(let i = arr.length - 1; i > 0; i--){
     const j = Math.floor(Math.random() * (i + 1));
