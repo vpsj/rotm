@@ -83,6 +83,10 @@ textarea{
   white-space:nowrap;
   margin-left:6px;
 }
+.video-cell .author.duplicate-op{
+  color:#ff4d4d;
+  font-weight:700;
+}
 </style>
 </head>
 
@@ -313,6 +317,13 @@ function calculate(){
 function renderScores(){
   scoresBody.innerHTML="";
   const sorted=[...Object.values(videos)].sort((a,b)=>b.total-a.total);
+
+  const authorCounts = {};
+  Object.values(videos).forEach(v=>{
+    const author = (v.author || "unknown").trim().toLowerCase();
+    authorCounts[author] = (authorCounts[author] || 0) + 1;
+  });
+
   sorted.forEach((v,i)=>{
     const tr=document.createElement("tr");
     if(i===0)tr.classList.add("top1");
@@ -322,7 +333,7 @@ function renderScores(){
       <td>${i+1}</td>
       <td class="video-cell">
   <a href="${v.redditUrl}" target="_blank">${v.title}</a>
-  <span class="author">by u/${v.author || "unknown"}</span>
+  <span class="author ${authorCounts[(v.author || "unknown").trim().toLowerCase()] > 1 ? "duplicate-op" : ""}">by u/${v.author || "unknown"}</span>
 </td>
       <td>${v.upvotes}</td>
       <td>${v.upvotePoints}</td>
